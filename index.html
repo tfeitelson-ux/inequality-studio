@@ -44,13 +44,14 @@
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 </head>
 <body>
-<header><div><h1>◈ 3D Inequality Modeling Studio <span class="chip">Prototype 4.12.3</span></h1><small>Build 3D solids with mathematics, not CAD commands</small></div><small id="saveState">Project autosaved locally</small></header>
+<header><div><h1>◈ 3D Inequality Modeling Studio <span class="chip">Prototype 4.12.4</span></h1><small>Build 3D solids with mathematics, not CAD commands</small></div><small id="saveState">Project autosaved locally</small></header>
 <div class="app">
 <aside class="panel">
 <div class="challenge-box"><label for="studioMode">Studio mode</label><select id="studioMode"><option value="free">Free Build</option><option value="challenge">Challenges</option></select><div id="challengePicker" style="display:none"><label for="challengeSelect" style="margin-top:9px">Choose a challenge</label><select id="challengeSelect"></select><p style="margin-bottom:0">The target is a separate rotatable 3D object; dimensions don't need to match exactly.</p></div></div>
 <section class="library-panel"><h2>My Projects <span class="chip">On this device</span></h2><label for="projectSelect">Current project</label><select id="projectSelect" aria-label="Select saved project"></select><div class="buttonrow"><button class="primary" id="newProject">+ New project</button><button id="renameProject">Rename</button><button id="duplicateProject">Duplicate</button><button class="delete" id="deleteProject">Delete</button></div><div class="file-status" id="fileStatus" role="status">Checking local file connection…</div>
 <div class="buttonrow"><button class="primary" id="saveFile">Save to file</button><button id="saveFileAs">Save As…</button><button id="reconnectFile" style="display:none">Reconnect file</button></div>
-<div class="buttonrow"><button id="openLocalFile" title="Choose a .ineqstudio or .json project file; all files are shown">Open local file</button><button id="download">Download backup</button><button id="open">Import project file</button><input id="file" type="file"><input id="localFileInput" type="file" style="display:none"></div>
+<div class="buttonrow"><button id="openLocalFile" title="Open a saved .json or legacy .ineqstudio project">Open local file</button><button id="download">Download backup</button><button id="open">Import project file</button><input id="file" type="file"><input id="localFileInput" type="file" style="display:none"></div>
+<div id="dropProject" tabindex="0" style="border:1px dashed #638bb5;border-radius:8px;padding:10px;margin:8px 0;font-size:12px;color:#c8e0f5;text-align:center">Or drag a saved .json / .ineqstudio file here to open it</div>
 <p><strong>Saving:</strong> Changes are always copied to this browser. Once you connect a project file, changes also autosave to that file while permission is available. If the file connection is interrupted, reconnect it or download a backup. Cloud sync is not yet enabled.</p></section>
 <h2>Starter projects</h2><select id="examples" aria-label="Starter project"><option value="">Choose a starter…</option><option value="sphere">Sphere</option><option value="pipe">Hollow cylinder</option><option value="vase">Wavy hollow vase</option><option value="two">Two separate objects</option><option value="torus">Torus</option><option value="box">Rectangular block</option><option value="poly">Six-inequality polyhedron</option></select>
 <h2>Objects <span id="objectCount" class="chip">1</span></h2><p>Each object contains mathematical regions. All inequalities within a region must be true. Add, subtract, or intersect regions within that object.</p>
@@ -500,7 +501,7 @@ function openHandleDB(){if(!('indexedDB' in window))return Promise.reject(new Er
 async function handleStore(op,key,val){const db=await openHandleDB();return new Promise((resolve,reject)=>{const tx=db.transaction('handles',op==='get'?'readonly':'readwrite');const store=tx.objectStore('handles');let req=op==='get'?store.get(key):op==='set'?store.put(val,key):store.delete(key);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
 function exportPayload(item){return {...structuredClone(item.data),projectName:item.name,studioProjectId:item.id,formatVersion:1}}
 function jsonText(item){return JSON.stringify(exportPayload(item),null,2)+'\n'}
-function fileName(name){return (name||'Inequality-Project').replace(/[^a-z0-9-_ ]/gi,'').trim().replace(/\s+/g,'-').slice(0,75)+'.ineqstudio'}
+function fileName(name){return (name||'Inequality-Project').replace(/[^a-z0-9-_ ]/gi,'').trim().replace(/\s+/g,'-').slice(0,75)+'.json'}
 async function canWrite(handle){try{return (await handle.queryPermission({mode:'readwrite'}))==='granted'}catch{return false}}
 async function getWritePermission(handle){if(await canWrite(handle))return true;try{return (await handle.requestPermission({mode:'readwrite'}))==='granted'}catch{return false}}
 async function saveSnapshotToHandle(id,snapshot,handleOverride=null){const handle=handleOverride||handleCache.get(id);if(!handle){fileMessage(id,'Saved in browser only — no file connected.','warning');return false}
@@ -526,7 +527,7 @@ async function saveToFile(asNew=false){const item=currentItem();if(!item)return;
  if(!supportsFileAccess){fileMessage(item.id,'Direct file saving is unavailable in this browser. Use Download backup.','warning');return}
  try{
   let handle=!asNew?handleCache.get(item.id):null;
-  if(!handle){handle=await window.showSaveFilePicker({suggestedName:fileName(item.name),types:[{description:'Inequality Studio project',accept:{'application/json':['.ineqstudio','.json']}}]});await bindHandle(item.id,handle)}
+  if(!handle){handle=await window.showSaveFilePicker({suggestedName:fileName(item.name),types:[{description:'Inequality Studio project (JSON)',accept:{'application/json':['.json']}}]});await bindHandle(item.id,handle)}
   if(!(await getWritePermission(handle))){fileMessage(item.id,'File permission denied. Browser copy retained; reconnect or download a backup.','warning');return}
   clearTimeout(pendingFileTimers.get(item.id));pendingFileTimers.delete(item.id);
   await enqueueFileWrite(item.id,jsonText(item),handle);
@@ -552,31 +553,26 @@ function validProjectData(data){return data&&((Array.isArray(data.objects)&&data
 // restricts files by their registered MIME type. Reconnect separately for
 // automatic in-place file writing.
 function openLocalFile(){const input=$('localFileInput');input.value='';input.click()}
-$('localFileInput').addEventListener('change',async e=>{
- const file=e.target.files?.[0];
+async function importChosenFile(file){
  if(!file)return;
  const destination=$('fileStatus');
- destination.textContent='Opening '+file.name+'…';
- destination.className='file-status saving';
+ destination.textContent='Opening '+file.name+'…';destination.className='file-status saving';
  try{
-  const raw=await file.text();
-  let data;
-  try{data=JSON.parse(raw)}catch{throw Error('The selected file is not valid JSON. Check that it is a Studio project file.');}
-  if(!validProjectData(data))throw Error('This file does not contain a supported Studio design (objects or equations missing).');
-  // Do not use prompt() during a file input change. Browsers may suppress that
-  // dialog after asynchronous file reading, making a valid file appear not to open.
+  const raw=await file.text();let data;
+  try{data=JSON.parse(raw)}catch{throw Error('Not a JSON project file. Please choose a file saved using Save to file or Download backup.');}
+  if(!validProjectData(data))throw Error('No Studio equations or objects were found in this file.');
   const base=String(data.projectName||file.name.replace(/\.(ineqstudio|json)$/i,'')||'Imported project').trim().slice(0,90)||'Imported project';
-  const item=createProject(base,data);
-  libraryRefresh();
-  fileMessage(item.id,'✓ Opened '+file.name+' as project "'+item.name+'". Saved in browser; use Save to file to enable direct autosaving.','warning');
+  const item=createProject(base,data);libraryRefresh();
+  fileMessage(item.id,'✓ Opened '+file.name+'. The project is now in My Projects. Click Save to file to connect direct autosaving.','warning');
   say('Opened project: '+item.name);
- }catch(err){
-  const message='Cannot open '+file.name+': '+err.message;
-  destination.textContent=message;
-  destination.className='file-status error';
-  say(message,true);
- }finally{e.target.value=''}
-});
+ }catch(err){const message='Cannot open '+file.name+': '+err.message;destination.textContent=message;destination.className='file-status error';say(message,true)}
+}
+$('localFileInput').addEventListener('change',async e=>{const file=e.target.files?.[0];try{await importChosenFile(file)}finally{e.target.value=''}});
+const dropProject=$('dropProject');
+for(const eventName of ['dragenter','dragover'])dropProject.addEventListener(eventName,e=>{e.preventDefault();dropProject.style.background='#244565';});
+for(const eventName of ['dragleave','drop'])dropProject.addEventListener(eventName,e=>{e.preventDefault();dropProject.style.background='';});
+dropProject.addEventListener('drop',e=>{const file=e.dataTransfer?.files?.[0];if(file)importChosenFile(file)});
+dropProject.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openLocalFile()}});
 async function restoreHandles(){if(!supportsFileAccess){refreshFileMessage();return}
  try{for(const item of library.items){const handle=await handleStore('get',item.id);if(handle){handleCache.set(item.id,handle);if(await canWrite(handle))fileState.set(item.id,{message:'✓ Connected to project file: '+handle.name,kind:'success'});else fileState.set(item.id,{message:'Saved in browser; reconnect file permission to resume autosaving: '+handle.name,kind:'warning'})}}}catch(e){console.warn('Stored file handles unavailable',e)}
  refreshFileMessage()}
