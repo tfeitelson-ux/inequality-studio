@@ -69,21 +69,40 @@
 .sidebar-fold>.fold-content{padding:0 12px 12px}.sidebar-fold .library-panel{border:0;margin:0;padding:0;background:none}.sidebar-fold .window-panel{margin:0;background:none;border:0}.sidebar-fold .print-settings{border:0;margin:0;background:none;padding:0}
 .sidebar-fold .challenge-box{border:0;margin:0;background:none;padding:0}.sidebar-fold h2{display:none}.sidebar-fold .window-header{display:none}.sidebar-fold .window-details{display:block!important;padding:6px 0}
 #equationsAnchor+h2{margin-top:12px}.saving-guide{font-size:11px;color:#b6c8dd;padding-top:6px}
+
+/* 4.14: compact workspace bar and explicit first-save dialog */
+body{display:flex;flex-direction:column;min-height:100vh;height:100dvh}
+header{flex-shrink:0;min-height:78px;padding:10px 19px;gap:16px}
+header .brand{min-width:230px}header .brand h1{font-size:16px}header .brand small{font-size:11px}
+.toolbar-project{display:flex;flex:1;min-width:150px;flex-direction:column;gap:2px}
+.toolbar-caption{font-size:10px;font-weight:800;letter-spacing:.09em;color:#94b0cf}
+#toolbarProjectName{font-size:15px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:440px}
+#saveState{font-size:11px;color:#b8d3ef}
+.toolbar-mode{display:flex;gap:9px;align-items:center}.toolbar-mode label{margin:0;font-size:12px;white-space:nowrap}
+.toolbar-mode select{padding:8px 28px 8px 10px;width:auto;min-width:138px}
+.app{flex:1;min-height:0;height:auto}
+#newProjectModal input[type=text]{font-family:system-ui;font-size:16px;margin:5px 0 13px}
+#newProjectError{color:#ffb7c2;min-height:1.3em}
+@media(max-width:760px){header{gap:8px}.toolbar-project{order:3;flex-basis:100%}body{height:auto}.app{flex:none;height:auto}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/mathjs@13.2.0/lib/browser/math.js"></script>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 </head>
 <body>
-<header><div><h1>◈ 3D Inequality Modeling Studio <span class="chip">Prototype 4.13</span></h1><small>Build 3D solids with mathematics, not CAD commands</small></div><small id="saveState">Project autosaved locally</small></header>
+<header>
+ <div class="brand"><h1>◈ 3D Inequality Modeling Studio <span class="chip">Prototype 4.14</span></h1><small>Build 3D solids with mathematics, not CAD commands</small></div>
+ <div class="toolbar-project"><span class="toolbar-caption">CURRENT PROJECT</span><strong id="toolbarProjectName">Loading…</strong><small id="saveState">Checking save status…</small></div>
+ <div class="toolbar-mode"><label for="studioMode">Studio mode</label><span id="toolbarModeSlot"></span></div>
+</header>
 <div class="app">
 <aside class="panel">
-<div class="active-project" aria-label="Current design">
+<div class="active-project" aria-label="Current design" style="display:none">
   <div class="active-head"><span class="eyebrow">CURRENT PROJECT</span><button id="topNewProject" class="primary">+ New</button></div>
   <div class="active-name"><strong id="activeProjectName">Loading…</strong><button id="topRenameProject" title="Rename current project" aria-label="Rename current project">✎</button></div>
   <div class="active-save" id="activeSaveStatus" role="status" aria-live="polite">Checking saving…</div>
 </div>
 <div id="equationsAnchor"></div>
-<div class="challenge-box"><label for="studioMode">Studio mode</label><select id="studioMode"><option value="free">Free Build</option><option value="challenge">Challenges</option></select><div id="challengePicker" style="display:none"><label for="challengeSelect" style="margin-top:9px">Choose a challenge</label><select id="challengeSelect"></select><p style="margin-bottom:0">The target is a separate rotatable 3D object; dimensions don't need to match exactly.</p></div></div>
+<div class="challenge-box"><select id="studioMode"><option value="free">Free Build</option><option value="challenge">Challenges</option></select><div id="challengePicker" style="display:none"><label for="challengeSelect" style="margin-top:9px">Choose a challenge</label><select id="challengeSelect"></select><p style="margin-bottom:0">The target is a separate rotatable 3D object; dimensions don't need to match exactly.</p></div></div>
 <section class="library-panel"><h2>My Projects <span class="chip">On this device</span></h2><label for="projectSelect">Current project</label><select id="projectSelect" aria-label="Select saved project"></select><div class="buttonrow"><button class="primary" id="newProject">+ New project</button><button id="renameProject">Rename</button><button id="duplicateProject">Duplicate</button><button class="delete" id="deleteProject">Delete</button></div><div class="file-status" id="fileStatus" role="status">Checking local file connection…</div>
 <div class="buttonrow"><button class="primary" id="saveFile">Connect file / Save</button><button id="saveFileAs">Save As…</button><button id="reconnectFile" style="display:none">Reconnect file</button></div>
 <div class="buttonrow"><button type="button" id="openProjectDialog" class="primary">Open project…</button><button id="download">Download backup</button></div>
@@ -95,6 +114,13 @@
   <p class="picker-note">Alternatively, use the standard Choose File control. On some Macs its file list may hide project files; drag-and-drop is the reliable option.</p>
   <input id="localFileInput" type="file" aria-label="Choose a project file to open" />
   <p id="modalOpenStatus" role="status" aria-live="polite"></p>
+</dialog>
+<dialog id="newProjectModal" class="open-project-modal" aria-labelledby="newProjectTitle">
+ <div class="modal-head"><strong id="newProjectTitle">Create a new project</strong><button type="button" id="closeNewProject" aria-label="Cancel">✕</button></div>
+ <p>Give your design a name, then choose where to save its project file. The file picker opens directly when you click <strong>Create &amp; Save</strong>.</p>
+ <label for="newProjectName">Project name</label><input id="newProjectName" type="text" maxlength="90" value="Untitled design" autocomplete="off" />
+ <div class="buttonrow"><button type="button" id="confirmCreateSave" class="primary">Create &amp; Save</button><button type="button" id="confirmCreateBrowser">Create in browser only</button></div>
+ <p id="newProjectError" role="status" aria-live="polite"></p>
 </dialog>
 <p>Once a file is connected, edits save automatically when file permission remains available. The browser also keeps a recovery copy. Cloud sync is not enabled.</p></section>
 <h2>Starter projects</h2><select id="examples" aria-label="Starter project"><option value="">Choose a starter…</option><option value="sphere">Sphere</option><option value="pipe">Hollow cylinder</option><option value="vase">Wavy hollow vase</option><option value="two">Two separate objects</option><option value="torus">Torus</option><option value="box">Rectangular block</option><option value="poly">Six-inequality polyhedron</option></select>
@@ -129,7 +155,7 @@ function prepareSidebar(){
    const content=document.createElement('div');content.className='fold-content';elements.forEach(el=>content.appendChild(el));d.append(summary,content);aside.appendChild(d);return d;
  }
  const lib=document.querySelector('.library-panel');const starterTitle=$('examples').previousElementSibling;
- const challenge=document.querySelector('.challenge-box');const resolutionTitle=$('resolution').previousElementSibling.previousElementSibling;
+ const challenge=document.querySelector('.challenge-box');$('toolbarModeSlot').appendChild($('studioMode'));const resolutionTitle=$('resolution').previousElementSibling.previousElementSibling;
  const sliderLabel=$('resolution').previousElementSibling;const res=$('resolution');const sliderHint=res.nextElementSibling;
  fold('My Projects','Switch / open / backup',[lib]);
  fold('Challenges','Free Build / targets',[challenge]);
@@ -546,7 +572,7 @@ function newId(){return 'p-'+Date.now().toString(36)+'-'+Math.random().toString(
 function currentItem(){return library.items.find(p=>p.id===library.current)}
 function freshData(){return {app:'3D Inequality Modeling Studio',version:8,objects:[{name:'Object 1',visible:true,regions:[{name:'Base',op:'base',eq:'-2 <= x <= 2\n-2 <= y <= 2\n0 <= z <= 2',ignored:false}]}],mode:'parts',showGrid:true,windowExpanded:false,resolution:44,bounds:{x:[-6,6],y:[-6,6],z:[-2,8]}}}
 function libraryRefresh(){const select=$('projectSelect');if(!select)return;select.replaceChildren();for(const item of library.items){const option=document.createElement('option');option.value=item.id;option.textContent=item.name;select.append(option)}select.value=library.current;
- const active=currentItem();$('activeProjectName').textContent=active?.name||'No project';
+ const active=currentItem();$('activeProjectName').textContent=active?.name||'No project';$('toolbarProjectName').textContent=active?.name||'No project';
  document.querySelectorAll('.sidebar-fold').forEach(d=>{if(d.querySelector('#projectSelect'))d.querySelector('.fold-meta').textContent=active?.name||'None'});
 }
 function storeLibrary(){try{localStorage.setItem(LIBRARY_KEY,JSON.stringify(library));return true}catch(e){$('saveState').textContent='⚠ Browser saving failed — download backup';say('Browser saving failed: '+e.message+'. Download a backup now.',true);return false}}
@@ -689,14 +715,39 @@ function initLibrary(){let parsed;try{parsed=JSON.parse(localStorage.getItem(LIB
 if(!currentItem()){let legacy=null;try{legacy=JSON.parse(localStorage.getItem('inequality-studio-v4')||'null')||JSON.parse(localStorage.getItem('inequality-studio-v1')||'null')}catch(e){}library={items:[{id:newId(),name:legacy?'Recovered previous design':'My first design',updated:Date.now(),data:legacy&&(legacy.objects||legacy.equations)?legacy:projectData()}],current:null};library.current=library.items[0].id}
 normalizeDuplicateNames();libraryRefresh();loadData(currentItem().data,false);storeLibrary();restoreHandles()}
 $('projectSelect').onchange=()=>openProject($('projectSelect').value);
-async function createAndSaveProject(){
- const name=projectName('Untitled design');if(name===null)return;
- const item=createProject(name,freshData());
- fileMessage(item.id,'New project created in browser. Choose a file location to enable automatic file saving.','warning');
- await saveToFile(false);
+function showNewProjectDialog(){
+ const dialog=$('newProjectModal');$('newProjectError').textContent='';
+ $('newProjectName').value=uniqueProjectName('Untitled design');
+ if(!dialog.open)dialog.showModal();$('newProjectName').focus();$('newProjectName').select();
 }
-$('newProject').onclick=createAndSaveProject;
-$('topNewProject').onclick=createAndSaveProject;
+$('newProject').onclick=showNewProjectDialog;
+$('topNewProject').onclick=showNewProjectDialog;
+$('closeNewProject').onclick=()=>$('newProjectModal').close();
+$('newProjectModal').addEventListener('click',e=>{if(e.target===$('newProjectModal'))$('newProjectModal').close()});
+$('confirmCreateBrowser').onclick=()=>{
+ const name=$('newProjectName').value.trim();if(!name){$('newProjectError').textContent='Enter a project name.';return}
+ const item=createProject(name,freshData());$('newProjectModal').close();
+ fileMessage(item.id,'Saved in browser only — connect a project file before relying on this as your only copy.','warning');
+};
+$('confirmCreateSave').onclick=async()=>{
+ const name=$('newProjectName').value.trim();if(!name){$('newProjectError').textContent='Enter a project name.';return}
+ if(!supportsFileAccess){$('newProjectError').textContent='Direct file saving is not supported in this browser. Use Create in browser only, then Download backup.';return}
+ // CRITICAL: invoke the native save dialog synchronously in the button click handler.
+ // Any prompt, await, or other asynchronous work BEFORE this call loses user activation.
+ let picked;
+ try{picked=window.showSaveFilePicker({suggestedName:fileName(name),types:[{description:'Studio project (JSON)',accept:{'application/json':['.json']}}]})}
+ catch(e){$('newProjectError').textContent='Cannot open save dialog: '+e.message;return}
+ const btn=$('confirmCreateSave');btn.disabled=true;btn.textContent='Choosing location…';
+ try{
+   const handle=await picked;
+   const item=createProject(name,freshData());
+   await bindHandle(item.id,handle);
+   $('newProjectModal').close();
+   if(!(await getWritePermission(handle))){fileMessage(item.id,'File permission not granted. Design saved in browser only.','warning');return}
+   await enqueueFileWrite(item.id,jsonText(item),handle);
+ }catch(e){if(e.name!=='AbortError')$('newProjectError').textContent='Could not save project: '+e.message}
+ finally{btn.disabled=false;btn.textContent='Create & Save'}
+};
 $('topRenameProject').onclick=()=>$('renameProject').click();
 $('renameProject').onclick=()=>{const p=currentItem();if(!p)return;const name=projectName(p.name);if(name!==null){p.name=uniqueProjectName(name,p.id);libraryRefresh();storeLibrary()}};
 $('duplicateProject').onclick=()=>{const p=currentItem();if(!p)return;const name=projectName(p.name+' (copy)');if(name!==null)createProject(name,projectData())};
