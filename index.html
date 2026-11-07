@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Inequality Modeling Studio — Prototype</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#e8edf5;background:#0b1220}*{box-sizing:border-box}body{margin:0}header{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid #26364d;background:#111c2d;gap:12px;flex-wrap:wrap}h1{font-size:19px;margin:0}header small{color:#9eb3d0}.app{display:grid;grid-template-columns:minmax(300px,370px) 1fr;height:calc(100vh - 72px);min-height:570px}.panel{padding:22px;overflow:auto;border-right:1px solid #26364d;background:#111b2b}h2{font-size:13px;color:#a9bfdc;text-transform:uppercase;letter-spacing:.11em;margin:22px 0 10px}h2:first-child{margin-top:0}p{color:#a9bdd7;line-height:1.5;font-size:13px}label{display:block;font-size:13px;font-weight:650;margin-bottom:8px}textarea,select,input[type=text]{background:#0a1424;color:#f4f8ff;border:1px solid #3d5675;border-radius:9px;width:100%;padding:12px;font:15px ui-monospace,SFMono-Regular,Consolas,monospace}textarea{min-height:178px;resize:vertical;line-height:1.8}select{font:14px system-ui}.hint{font-size:12px;color:#8fa6c2;margin-top:9px}button{border:1px solid #446080;background:#243b58;color:#fff;padding:9px 12px;border-radius:8px;cursor:pointer;font-weight:600}button:hover{background:#345374}.primary{background:#3275bd;border-color:#4f9cfa}.primary:hover{background:#4085d4}.buttonrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}.sliderrow{display:flex;justify-content:space-between;align-items:center}input[type=range]{width:100%;accent-color:#6aabfd}.status{padding:12px;margin-top:18px;border-radius:8px;background:#1d3049;color:#c4e0ff;font-size:13px;min-height:42px}.status.error{background:#442636;color:#ffbdc4}.viewer{position:relative;min-height:440px;background:radial-gradient(ellipse at 45% 35%,#1c3048,#0c1422 72%)}#canvas{width:100%;height:100%;display:block;touch-action:none}.overlay{position:absolute;left:20px;top:18px;background:#101e31d9;color:#c5d6ec;font-size:12px;padding:10px 13px;border-radius:9px;pointer-events:none}.viewerfooter{position:absolute;bottom:17px;left:20px;right:20px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#b7c9e0;font-size:12px;pointer-events:none}.viewerfooter span{background:#101e31cb;padding:8px 11px;border-radius:7px}.chip{color:#a8cdfc;background:#213c5c;padding:3px 7px;border-radius:6px;font-size:11px}.boundsgrid{display:grid;grid-template-columns:40px 1fr 1fr;gap:7px;align-items:center}.boundsgrid input{min-width:0;width:100%;background:#0a1424;color:#f4f8ff;border:1px solid #3d5675;border-radius:7px;padding:8px;font:13px ui-monospace,monospace}.boundsgrid .axis{font-weight:700;color:#a8cdfc}.boundsgrid .colhead{font-size:11px;color:#9eb3d0}.off{opacity:.45}#file{display:none}@media(max-width:750px){.app{display:flex;flex-direction:column;height:auto}.panel{border-right:0;border-bottom:1px solid #26364d}.viewer{height:65vh;min-height:470px}header{padding:12px 16px}}
+
+.object-card{border:1px solid #344862;border-radius:11px;margin:10px 0;background:#16243a;overflow:hidden}.object-head{padding:11px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}.object-head input[type=text]{flex:1;min-width:115px;font:600 13px system-ui;padding:8px}.object-head button,.region-card button{padding:5px 8px;font-size:12px}.object-body{padding:0 11px 12px}.region-card{background:#0c1728;border:1px solid #30445f;border-radius:9px;padding:9px;margin:9px 0}.region-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px}.region-title input[type=text]{font:12px system-ui;padding:6px;min-width:85px;flex:1}.region-title select{width:auto;padding:6px;font:12px system-ui}.region-card.is-ignored{opacity:.58;border-style:dashed}.region-card.is-ignored textarea{background:#101a2a}.region-card textarea{min-height:90px;font-size:13px;padding:9px}.region-hint{font-size:11px;color:#a6b8ce}.tiny{font-size:11px;color:#b7c9e0}.mini-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.object-dot{display:inline-block;width:15px;height:15px;flex:0 0 15px;border-radius:4px;border:1px solid #d5e4f9}.inlinecheck{display:inline-flex;align-items:center;gap:4px;font-size:12px;margin:0}.inlinecheck input{margin:0}.panel{padding:16px}.panel h2{margin-top:17px}.selected{outline:1px solid #6baaf7}.viewer .modebar{position:absolute;top:16px;right:18px;background:#14253bd9;border-radius:9px;padding:7px;display:flex;gap:5px}.modebar button{font-size:12px;padding:7px}.modebar .chosen{background:#3981ca}.notice{font-size:12px;color:#d5b77e}.object-head .delete{color:#ffb3ba}.viewerfooter span{max-width:65%}
+
+/* Collapsible, visually separated object panels */
+.object-card{margin:14px 0 18px;border:2px solid #4a6484;background:#16263e;box-shadow:0 4px 12px #030a1699}
+.object-card.is-collapsed{background:#142238}
+.object-head{padding:12px;display:flex;align-items:center;flex-wrap:nowrap;gap:8px}
+.object-head input[type=text]{min-width:0;flex:1}
+.object-head .object-toggle{flex:0 0 auto;min-width:100px;height:32px;padding:0 9px;font-size:12px;background:#284766;border-color:#526e8e;white-space:nowrap}
+.object-head .object-dot{width:17px;height:17px;flex-basis:17px}
+.object-head .inlinecheck{flex:0 0 auto;white-space:nowrap}
+.object-body{border-top:1px solid #3a5270;padding:12px}
+.object-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.object-summary{font-size:11px;color:#9fb9d7;padding:0 12px 12px 48px}
+.object-card:not(.is-collapsed) .object-summary{display:none}
+ .object-card.is-collapsed .object-body{display:none}
+.object-head .desmos-mini{flex:0 0 28px;width:28px;height:29px;padding:0;font-weight:800;color:#99ccff;background:#173653;border-color:#51779d}
+.window-panel{margin:18px 0 12px;border:1px solid #456b86;border-radius:11px;background:#1a2e43;overflow:hidden}
+.window-header{display:flex;align-items:center;gap:8px;width:100%;border:0;border-radius:0;background:#24415b;text-align:left;padding:11px 12px}
+.window-header:hover{background:#2b506f}.window-header strong{flex:1}.window-summary{font-size:11px;font-weight:400;color:#c0d1e4}
+.window-details{padding:12px}.window-panel.collapsed .window-details{display:none}
+.grid-toggle{display:flex;align-items:center;gap:6px;white-space:nowrap;color:#e0edfa;font-size:12px;padding:6px 8px;cursor:pointer}
+.camera-views{position:absolute;top:58px;right:18px;z-index:4;display:flex;gap:5px;background:#101e31d9;border:1px solid #33506f;padding:5px;border-radius:9px}.camera-views button{padding:6px 9px;font-size:12px;min-width:34px}.camera-views button.chosen{background:#3275bd;border-color:#7cbaff}.grid-toggle input{accent-color:#79b6f9}.grid-number{pointer-events:none}
+.delete-toast{position:absolute;left:50%;transform:translateX(-50%);bottom:62px;z-index:5;background:#203752;border:1px solid #6080a2;border-radius:9px;padding:9px 13px;display:none;align-items:center;gap:14px;box-shadow:0 6px 20px #0008;font-size:13px}
+.delete-toast.active{display:flex}.delete-toast button{padding:6px 10px}
+.modebar{align-items:center;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 20px)}
+@media(max-width:540px){.object-head .object-toggle{min-width:35px;font-size:0}.object-head .object-toggle::first-letter{font-size:15px}.window-header{flex-wrap:wrap}.modebar{top:48px!important;right:8px!important}}
+@media(max-width:400px){.object-head{gap:5px}.object-head .inlinecheck{font-size:11px}.object-head input[type=text]{font-size:12px;padding:7px}}
+
+/* Challenge and fabrication workspace */
+.workspace{display:flex;min-width:0;min-height:0}.viewer{flex:1;min-width:0}.challenge-panel{display:none;width:40%;min-width:260px;background:#101c2d;border-left:2px solid #324c6c;flex-direction:column;padding:12px;gap:9px;overflow:auto}.app.challenge-on .challenge-panel{display:flex}.challenge-panel canvas{width:100%;height:clamp(240px,46vh,540px);background:radial-gradient(ellipse,#243c58,#0e1929 76%);border-radius:9px;touch-action:none}.challenge-panel h3{margin:0;color:#e2ecf9;font-size:15px}.challenge-panel p{margin:0}.challenge-panel .tag{font-size:11px;color:#a7c6ec}.challenge-panel .challenge-actions{display:flex;flex-wrap:wrap;gap:7px}.challenge-panel .challenge-actions button{font-size:12px;padding:7px 9px}.choice{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:7px}.choice select{max-width:160px}.print-settings{border:1px solid #405b75;background:#172940;border-radius:10px;padding:11px;margin:13px 0}.print-settings input[type=number]{width:90px;padding:6px;background:#0b1929;color:white;border:1px solid #526d8e;border-radius:5px}.print-settings label{margin:5px 0}.print-settings select{width:90px;padding:6px}.print-settings .buttonrow{margin-top:7px}.print-notice{font-size:11px;line-height:1.4;color:#c7d8ee;margin-top:8px}.axis-legend{position:absolute;right:18px;bottom:60px;background:#12243cda;border-radius:8px;padding:7px 9px;font-size:12px;color:#e4ecf6;display:flex;gap:10px;z-index:2;pointer-events:none}.axis-legend i{display:inline-block;width:12px;height:4px;vertical-align:middle;margin-right:4px}.challenge-box{margin:13px 0;background:#152d43;padding:11px;border:1px solid #427ba1;border-radius:9px}.challenge-box label{font-size:12px}.challenge-box button{font-size:12px}.viewerfooter{bottom:14px}.viewerfooter span:last-child{display:none}
+@media(max-width:1050px){.app.challenge-on .workspace{flex-direction:column;overflow:auto}.app.challenge-on .viewer{min-height:400px}.app.challenge-on .challenge-panel{width:100%;min-height:400px}.app.challenge-on .challenge-panel canvas{height:320px}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mathjs@13.2.0/lib/browser/math.js"></script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header><div><h1>◈ 3D Inequality Modeling Studio <span class="chip">Prototype 4.9</span></h1><small>Build 3D solids with mathematics, not CAD commands</small></div><small id="saveState">Project autosaved locally</small></header>
+<div class="app">
+<aside class="panel">
+<div class="challenge-box"><label for="studioMode">Studio mode</label><select id="studioMode"><option value="free">Free Build</option><option value="challenge">Challenges</option></select><div id="challengePicker" style="display:none"><label for="challengeSelect" style="margin-top:9px">Choose a challenge</label><select id="challengeSelect"></select><p style="margin-bottom:0">The target is a separate rotatable 3D object; dimensions don't need to match exactly.</p></div></div>
+<h2>Starter projects</h2><select id="examples" aria-label="Starter project"><option value="">Choose a starter…</option><option value="sphere">Sphere</option><option value="pipe">Hollow cylinder</option><option value="vase">Wavy hollow vase</option><option value="two">Two separate objects</option><option value="torus">Torus</option><option value="box">Rectangular block</option><option value="poly">Six-inequality polyhedron</option></select>
+<h2>Objects <span id="objectCount" class="chip">1</span></h2><p>Each object contains mathematical regions. All inequalities within a region must be true. Add, subtract, or intersect regions within that object.</p>
+<div id="objectList"></div><button class="primary" id="addObject">+ New object</button>
+<h2>Mesh resolution</h2><div class="sliderrow"><label for="resolution">Sampling grid</label><strong id="resolutionLabel">44³</strong></div><input id="resolution" type="range" min="18" max="110" value="44" step="2"><div class="sliderrow hint"><span>Fast / coarse</span><span>Sharper / slower</span></div>
+<section id="windowPanel" class="window-panel collapsed">
+<button id="windowToggle" class="window-header" type="button" aria-expanded="false" aria-controls="windowDetails"><strong>▸ Viewing Window</strong><span id="windowSummary" class="window-summary">x: −6…6 · y: −6…6 · z: −2…8</span></button>
+<div id="windowDetails" class="window-details"><div class="boundsgrid"><span></span><span class="colhead">Minimum</span><span class="colhead">Maximum</span><span class="axis">x</span><input id="xmin" type="number" value="-6" step="0.5"><input id="xmax" type="number" value="6" step="0.5"><span class="axis">y</span><input id="ymin" type="number" value="-6" step="0.5"><input id="ymax" type="number" value="6" step="0.5"><span class="axis">z</span><input id="zmin" type="number" value="-2" step="0.5"><input id="zmax" type="number" value="8" step="0.5"></div>
+<div class="buttonrow"><button id="defaultBounds">Reset window</button><button id="fitBounds">Fit camera</button></div><div class="hint">The grid lies at z = 0. For exploration, unbounded regions are clipped to the viewing window. STL export still requires a truly bounded solid.</div></div></section>
+<section class="print-settings"><label>3D printing · improved STL</label><div class="choice"><span class="tiny">Detail</span><select id="exportN"><option value="50">Draft</option><option value="80" selected>Standard</option><option value="120">Fine</option><option value="180">Very fine (slow)</option></select><span class="tiny">Longest side (mm)</span><input id="exportMM" type="number" value="80" min="10" max="250" step="5"></div><div class="buttonrow"><button id="exportSTL" class="primary">Export STL</button></div><div class="print-notice">Exact flat faces for one convex linear object. Other objects use interpolated smooth-surface meshing rather than blocky cubes. The window must fully contain the solid; verify every STL in your slicer.</div></section>
+<h2>Your project</h2><div class="buttonrow"><button id="download">Download project</button><button id="open">Open project</button><input id="file" type="file" accept=".json,application/json"></div><p>Autosaves on this laptop. Download a project file to back it up or transfer it.</p>
+<div id="status" role="status" class="status">Loading 3D engine…</div>
+</aside>
+<div class="workspace"><main class="viewer"><canvas id="canvas" aria-label="Interactive three dimensional visualization"></canvas><div class="overlay">Drag to rotate · Scroll to zoom · Right-drag to pan</div><div class="modebar"><button id="showParts" class="chosen">Individual objects</button><button id="showFinal">Combined preview</button><label class="grid-toggle" title="Show or hide the grid plane, keeping colored axes and numbered ticks"><input id="showGrid" type="checkbox" checked> Show grid</label></div><div class="camera-views" aria-label="Camera views"><button id="view3d" class="chosen" title="Restore perspective and your last 3D angle">3D</button><button id="viewxy" title="Look straight down the z-axis">XY</button><button id="viewxz" title="Look along the y-axis">XZ</button><button id="viewyz" title="Look along the x-axis">YZ</button></div><div id="deleteToast" class="delete-toast" role="status"><span id="deleteText">Object deleted.</span><button type="button" id="undoDelete">↶ Undo</button></div><div class="axis-legend"><span><i style="background:#ef6666"></i>X</span><span><i style="background:#70d68e"></i>Y</span><span><i style="background:#67a8fb"></i>Z</span></div><div class="viewerfooter"><span id="meshInfo">Initializing mesh…</span></div></main><section class="challenge-panel" id="challengePanel"><h3 id="challengeTitle">Challenge target</h3><span class="tag">Drag to rotate • Scroll to zoom</span><canvas id="targetCanvas" aria-label="Rotatable challenge target"></canvas><p id="challengePrompt"></p><div class="challenge-actions"><button id="matchViews">Match views</button><button id="challengeHint">Show hint</button><button id="completeChallenge">I've got it!</button></div><p id="hintText" style="display:none"></p><p id="challengeProgress" class="tag"></p></section></div>
+</div>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+const $=id=>document.getElementById(id);
+const starter={
+ sphere:[{name:'Sphere',visible:true,regions:[{name:'Sphere region',op:'base',eq:'x^2+y^2+z^2 <= 16'}]}],
+ pipe:[{name:'Hollow cylinder',visible:true,regions:[{name:'Outer cylinder',op:'base',eq:'x^2+y^2 <= 25\n0 <= z <= 8'},{name:'Inner hole',op:'subtract',eq:'x^2+y^2 <= 9\n0 <= z <= 8'}]}],
+ vase:[{name:'Wavy vase (open tube)',visible:true,regions:[{name:'Outer wavy surface',op:'base',eq:'x^2+y^2 <= (2+0.4*sin(3*z))^2\n0 <= z <= 8'},{name:'Inner hollow',op:'subtract',eq:'x^2+y^2 <= (1.3+0.3*sin(3*z))^2\n0 <= z <= 8'}]}],
+ two:[{name:'Left sphere',visible:true,regions:[{name:'Sphere A',op:'base',eq:'(x+2)^2+y^2+z^2 <= 9'}]},{name:'Right sphere',visible:true,regions:[{name:'Sphere B',op:'base',eq:'(x-2)^2+y^2+z^2 <= 9'}]}],
+ torus:[{name:'Torus',visible:true,regions:[{name:'Ring',op:'base',eq:'(sqrt(x^2+y^2)-3)^2+z^2 <= 1'}]}],
+ box:[{name:'Block',visible:true,regions:[{name:'Rectangular solid',op:'base',eq:'-4 <= x <= 4\n-3 <= y <= 3\n-2 <= z <= 2'}]}],
+ poly:[{name:'Six-inequality polyhedron',visible:true,regions:[{name:'Planar constraints',op:'base',eq:'x >= 0\ny >= 0\nz >= 0\n4*x + 2*y + 2*z <= 108\n3*x + 6*y + 3*z <= 180\nx + y + 2*z <= 66'}]}]};
+// Curated targets are real inequality models (not generated illustration images).
+const challenges=[
+{id:'slab',title:'1. The Slab',prompt:'Build a thin rectangular solid lying horizontally. Choose your own dimensions.',hint:'Try bounding x, y and z separately.',objects:[{regions:[{eq:'-3 <= x <= 3\n-2 <= y <= 2\n0 <= z <= 0.8'}]}]},
+{id:'tower',title:'2. The Tower',prompt:'Build a tall, narrow rectangular prism.',hint:'One coordinate determines vertical height.',objects:[{regions:[{eq:'-1 <= x <= 1\n-1 <= y <= 1\n0 <= z <= 6'}]}]},
+{id:'presents',title:'3. Birthday Presents',prompt:'Stack three solid square presents, largest on the bottom. Proportions are your choice.',hint:'Try three regions combined with Add.',objects:[{regions:[{eq:'-3 <= x <= 3\n-3 <= y <= 3\n0 <= z <= 1.4'},{op:'add',eq:'-2 <= x <= 2\n-2 <= y <= 2\n1.4 <= z <= 3'},{op:'add',eq:'-1.2 <= x <= 1.2\n-1.2 <= y <= 1.2\n3 <= z <= 4.3'}]}]},
+{id:'twisted',title:'4. Twisted Stack',prompt:'Make two stacked square slabs, with the upper slab rotated 45°.',hint:'A rotated square can use bounds involving x+y and x-y.',objects:[{regions:[{eq:'-2.5 <= x <= 2.5\n-2.5 <= y <= 2.5\n0 <= z <= 1.2'},{op:'add',eq:'-3 <= x+y <= 3\n-3 <= x-y <= 3\n1.2 <= z <= 2.5'}]}]},
+{id:'triple',title:'5. Triple Twist (extension)',prompt:'Build three stacked square slabs with different orientations.',hint:'Vary linear combinations of x and y to change the rotation.',objects:[{regions:[{eq:'-3 <= x <= 3\n-3 <= y <= 3\n0 <= z <= 1'},{op:'add',eq:'-3 <= x+y <= 3\n-3 <= x-y <= 3\n1 <= z <= 2'},{op:'add',eq:'-3 <= x+0.4*y <= 3\n-3 <= y-0.4*x <= 3\n2 <= z <= 3'}]}]},
+{id:'blocks',title:'6. Floating Blocks',prompt:'Make two disconnected rectangular solids.',hint:'Use two independently bounded regions at different locations.',objects:[{regions:[{eq:'-4 <= x <= -1\n-2 <= y <= 1\n0 <= z <= 3'},{op:'add',eq:'1 <= x <= 3\n0 <= y <= 3\n2 <= z <= 5'}]}]},
+{id:'washer',title:'7. The Washer',prompt:'Create a thick circular disk with a hole through the center.',hint:'Subtract a narrow cylinder from a wider one.',objects:[{regions:[{eq:'x^2+y^2 <= 16\n0 <= z <= 2'},{op:'subtract',eq:'x^2+y^2 <= 4\n0 <= z <= 2'}]}]},
+{id:'diamond',title:'8. Diamond Window',prompt:'Cut a diamond-shaped hole through a rectangular slab.',hint:'Use slanted linear boundaries for the cutout.',objects:[{regions:[{eq:'-4 <= x <= 4\n-1 <= y <= 1\n0 <= z <= 6'},{op:'subtract',eq:'-1.5 <= x+(z-3) <= 1.5\n-1.5 <= x-(z-3) <= 1.5\n-1 <= y <= 1'}]}]},
+{id:'cubeholes',title:'9. Tunnel Cube (extension)',prompt:'Create a cube with two square tunnels through it.',hint:'Each tunnel can be a subtracted rectangular prism.',objects:[{regions:[{eq:'-3 <= x <= 3\n-3 <= y <= 3\n0 <= z <= 6'},{op:'subtract',eq:'-1 <= x <= 1\n-4 <= y <= 4\n2 <= z <= 4'},{op:'subtract',eq:'-4 <= x <= 4\n-1 <= y <= 1\n2 <= z <= 4'}]}]},
+{id:'mound',title:'10. The Mound',prompt:'Make a rounded mound with a flat bottom.',hint:'Intersect a sphere with a half-space.',objects:[{regions:[{eq:'x^2+y^2+z^2 <= 16\nz >= 0'}]}]},
+{id:'balls',title:'11. Three Balls in a Line',prompt:'Create three distinct spheres arranged in a line.',hint:'Translate the sphere center along one axis.',objects:[{regions:[{eq:'(x+3)^2+y^2+(z-2)^2 <= 2.25'},{op:'add',eq:'x^2+y^2+(z-2)^2 <= 2.25'},{op:'add',eq:'(x-3)^2+y^2+(z-2)^2 <= 2.25'}]}]},
+{id:'snowman',title:'12. Snowman',prompt:'Stack three spheres of decreasing size.',hint:'Move the center upward each time.',objects:[{regions:[{eq:'x^2+y^2+(z-2)^2 <= 4'},{op:'add',eq:'x^2+y^2+(z-4.7)^2 <= 2.25'},{op:'add',eq:'x^2+y^2+(z-6.8)^2 <= 1'}]}]},
+{id:'egg',title:'13. The Egg',prompt:'Make a shape stretched differently along the three coordinate axes.',hint:'Try a sphere equation with different denominators.',objects:[{regions:[{eq:'x^2/4+y^2/9+(z-3)^2/16 <= 1'}]}]},
+{id:'saturn',title:'14. Saturn',prompt:'Create a spherical planet surrounded by a flat circular ring.',hint:'Combine a sphere and a washer.',objects:[{regions:[{eq:'x^2+y^2+z^2 <= 5'},{op:'add',eq:'x^2+y^2 <= 25\nx^2+y^2 >= 10\n-0.35 <= z <= 0.35'}]}]},
+{id:'cross',title:'15. Crossing Cylinders',prompt:'Make two perpendicular cylinders crossing each other.',hint:'For each cylinder, omit a different squared coordinate from its radial inequality.',objects:[{regions:[{eq:'x^2+y^2 <= 4\n-4 <= z <= 4'},{op:'add',eq:'y^2+z^2 <= 4\n-4 <= x <= 4'}]}]},
+{id:'arch',title:'16. The Arch',prompt:'Construct a freestanding archway with an open passage.',hint:'Subtract a horizontal cylinder from the lower portion of a tall block.',objects:[{regions:[{eq:'-4 <= x <= 4\n-1 <= y <= 1\n0 <= z <= 6'},{op:'subtract',eq:'x^2+(z-1)^2 <= 6.25\n-2 <= y <= 2\nz <= 3.5'},{op:'subtract',eq:'-2.5 <= x <= 2.5\n-2 <= y <= 2\n0 <= z <= 1'}]}]},
+{id:'roof',title:'17. Slanted Roof',prompt:'Make a building with a roof formed by sloping planes.',hint:'Bounds involving both x and z can describe a pitched roof.',objects:[{regions:[{eq:'-3 <= x <= 3\n-2 <= y <= 2\n0 <= z <= 3'},{op:'add',eq:'-3 <= x <= 3\n-2 <= y <= 2\n3 <= z <= 5-abs(x)*2/3'}]}]},
+{id:'pyramid',title:'18. The Pyramid',prompt:'Build a square-based pyramid with four sloping triangular faces. The height and width are up to you.',hint:'As z increases, the allowable ranges of both x and y must shrink.',objects:[{regions:[{eq:'0 <= z <= 5\n-3+0.6*z <= x <= 3-0.6*z\n-3+0.6*z <= y <= 3-0.6*z'}]}]},
+{id:'pyramidcross',title:'19. Pyramid Cross',prompt:'Create two perpendicular long triangular ridges that cross each other, then place a small sphere above their intersection.',hint:'One ridge can use z <= 2-abs(y); for its perpendicular partner, switch x and y.',objects:[{regions:[{eq:'0 <= z <= 2-abs(y)\n-5 <= x <= 5'},{op:'add',eq:'0 <= z <= 2-abs(x)\n-5 <= y <= 5'},{op:'add',eq:'x^2+y^2+(z-2)^2 <= 1'}]}]}
+];
+const palette=['#78b8f2','#f6b56f','#8ed9ac','#d59ff1','#ee819b','#f3d879','#78d9d5'];
+let project={objects:structuredClone(starter.sphere),mode:'parts',showGrid:true,windowExpanded:false};
+const newRegion=(op='intersect')=>({name:'New region',op,eq:'x^2+y^2+z^2 <= 9',ignored:false});
+let scene,camera,perspectiveCamera,orthoCamera,renderer,controls,solids=[],grid,axes,axisLabels=[],renderTimer,version=0,targetScene,targetCamera,targetRenderer,targetControls,targetMeshes=[];const deletionStack=[];let cameraMode='3d',previous3D=null;let viewportWidth=1,viewportHeight=1;
+const expansion=new WeakMap();
+const canvas=$('canvas'),status=$('status');
+function say(s,error=false){status.textContent=s;status.classList.toggle('error',error)}
+function init(){scene=new THREE.Scene();perspectiveCamera=new THREE.PerspectiveCamera(48,1,.1,100000);perspectiveCamera.position.set(14,11,15);orthoCamera=new THREE.OrthographicCamera(-10,10,10,-10,.01,100000);camera=perspectiveCamera;renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.target.set(0,0,0);scene.add(new THREE.HemisphereLight(0xe0f0ff,0x283f68,2.7));const light=new THREE.DirectionalLight(0xffffff,2.5);light.position.set(8,13,9);scene.add(light);grid=new THREE.GridHelper(12,12,0x54718e,0x34475f);scene.add(grid);axes=new THREE.Group();scene.add(axes);updateWindowGuides();const resize=()=>{let w=canvas.clientWidth||1,h=canvas.clientHeight||1;viewportWidth=w;viewportHeight=h;renderer.setSize(w,h,false);perspectiveCamera.aspect=w/h;perspectiveCamera.updateProjectionMatrix();updateOrthoFrustum()};new ResizeObserver(resize).observe(canvas);resize();function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}animate();initTargetViewer()}
+function initTargetViewer(){const c=$('targetCanvas');targetScene=new THREE.Scene();targetCamera=new THREE.PerspectiveCamera(48,1,.1,200);targetRenderer=new THREE.WebGLRenderer({canvas:c,antialias:true,alpha:true});targetRenderer.setPixelRatio(Math.min(devicePixelRatio,2));targetRenderer.outputColorSpace=THREE.SRGBColorSpace;targetScene.add(new THREE.HemisphereLight(0xeaf2ff,0x263c59,2.7));const l=new THREE.DirectionalLight(0xffffff,2.2);l.position.set(8,12,10);targetScene.add(l);targetControls=new OrbitControls(targetCamera,c);targetControls.enableDamping=true;const resize=()=>{let w=c.clientWidth||300,h=c.clientHeight||300;targetRenderer.setSize(w,h,false);targetCamera.aspect=w/h;targetCamera.updateProjectionMatrix()};new ResizeObserver(resize).observe(c);resize();const loop=()=>{requestAnimationFrame(loop);if($('studioMode').value!=='challenge')return;targetControls.update();targetRenderer.render(targetScene,targetCamera)};loop()}
+function normalize(s){return s.replace(/≤/g,'<=').replace(/≥/g,'>=').replace(/−/g,'-').replace(/\u2212/g,'-')}
+function parseConditions(text){if(!window.math)throw Error('Math library did not load. Check your internet connection.');let terms=[];for(let raw of normalize(text).split(/[\n;]/)){let line=raw.trim();if(!line||line.startsWith('#'))continue;let parts=line.split(/(<=|>=|<|>)/).map(v=>v.trim()).filter(Boolean);if(parts.length!==3&&parts.length!==5)throw Error('Invalid inequality: '+line);for(let i=0;i<parts.length-2;i+=2){let a=parts[i],op=parts[i+1],b=parts[i+2];let compiled=math.compile(op[0]==='<'?`(${b})-(${a})`:`(${a})-(${b})`);terms.push({a,op,b,compiled})}}if(!terms.length)throw Error('Enter at least one inequality.');return terms}
+function compileObject(obj){const active=(obj.regions||[]).filter(r=>r.ignored!==true);if(!active.length)return null;const regions=active.map(r=>({op:r.op,terms:parseConditions(r.eq)}));const rf=terms=>(x,y,z)=>{let scope={x,y,z},val=Infinity;for(let term of terms){let n=term.compiled.evaluate(scope);if(typeof n!=='number'||!Number.isFinite(n))return -1000000;val=Math.min(val,n)}return val};const fields=regions.map(r=>({op:r.op,fn:rf(r.terms)}));return (x,y,z)=>{let value=fields[0].fn(x,y,z);for(let i=1;i<fields.length;i++){let next=fields[i].fn(x,y,z);switch(fields[i].op){case 'add':value=Math.max(value,next);break;case 'subtract':value=Math.min(value,-next);break;default:value=Math.min(value,next)}}return value}}
+function texExpr(expr){try{return math.parse(expr).toTex({parenthesis:'keep'}).replace(/\\mathrm\{(sin|cos|tan|sqrt|abs)\}/g,'\\$1')}catch(e){throw Error('Cannot convert to Desmos LaTeX: '+expr)}}
+function texCondition(c){const sym={'<=':'\\le','>=':'\\ge','<':'<','>':'>'}[c.op];return `${texExpr(c.a)}${sym}${texExpr(c.b)}`}
+function invertCondition(c){const sym={'<=':'>','>=':'<','<':'\\ge','>':'\\le'}[c.op];return `${texExpr(c.a)}${sym}${texExpr(c.b)}`}
+// Desmos 3D: one primary inequality followed by separate {restriction} blocks.
+// A subtraction negates its defining region. Constraints already guaranteed by
+// positive regions can be removed from that negation (e.g. a shared z range).
+function desmosLatex(obj){
+  const active=(obj.regions||[]).filter(r=>r.ignored!==true);
+  if(!active.length)throw Error('All regions in this object are ignored');
+  const rs=active.map(r=>({op:r.op,conditions:parseConditions(r.eq)}));
+  if(rs.some((r,i)=>i>0&&r.op==='add'))throw Error('Objects using Add (union) cannot yet be represented reliably by one Desmos expression');
+  const main=texCondition(rs[0].conditions[0]);
+  const blocks=[];
+  const guaranteed=[...rs[0].conditions];
+  for(const c of rs[0].conditions.slice(1))blocks.push(texCondition(c));
+  const same=(a,b)=>a.op===b.op&&a.a.replace(/\s/g,'')===b.a.replace(/\s/g,'')&&a.b.replace(/\s/g,'')===b.b.replace(/\s/g,'');
+  for(const r of rs.slice(1)){
+    if(r.op==='subtract'){
+      // NOT (a AND b AND c) = (NOT a) OR (NOT b) OR (NOT c).
+      // If a condition is already true for the positive object, its negation
+      // is impossible and can be discarded from the OR expression.
+      const relevant=r.conditions.filter(c=>!guaranteed.some(g=>same(c,g)));
+      if(!relevant.length)throw Error('The subtracted region covers the entire current object; there is no nonempty Desmos result');
+      blocks.push(relevant.length===1?invertCondition(relevant[0]):relevant.map(invertCondition).join('\\operatorname{or}'));
+    }else{
+      for(const c of r.conditions){blocks.push(texCondition(c));guaranteed.push(c)}
+    }
+  }
+  return main+blocks.map(b=>'\\left\\{'+b+'\\right\\}').join('');
+}
+// Marching tetrahedra: for each tetrahedron, interpolate sign changes along its edges.
+const tetra=[[0,5,1,6],[0,1,2,6],[0,2,3,6],[0,3,7,6],[0,7,4,6],[0,4,5,6]];
+const edges=[[0,1],[0,2],[0,3],[1,2],[1,3],[2,3]];
+function getBounds(){let b={};for(const a of ['x','y','z']){const lo=Number($(a+'min').value),hi=Number($(a+'max').value);if(!Number.isFinite(lo)||!Number.isFinite(hi)||$(a+'min').value===''||$(a+'max').value==='')throw Error('Enter valid bounds for '+a+'.');if(lo>=hi)throw Error('The '+a+' minimum must be less than the maximum.');if(hi-lo>10000)throw Error('The '+a+' viewing range is too large.');b[a]=[lo,hi]}return b}
+// Mathematical z is vertical. Three.js uses Y as its up axis: (x,y,z) -> (x,z,-y).
+function tickStep(range){const target=range/8;const mag=10**Math.floor(Math.log10(target));return [1,2,5,10].map(n=>n*mag).find(v=>v>=target)||10*mag}
+function tickNumbers(lo,hi){const step=tickStep(hi-lo),nums=[];const first=Math.ceil((lo-1e-9)/step)*step;for(let v=first;v<=hi+step*1e-7&&nums.length<40;v+=step){nums.push(Number(v.toPrecision(10)))}return nums}
+function makeLabel(text,color){const c=document.createElement('canvas');c.width=160;c.height=64;const ctx=c.getContext('2d');ctx.clearRect(0,0,160,64);ctx.font='bold 37px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#102037';ctx.fillText(text,82,32);ctx.fillStyle=color;ctx.fillText(text,80,30);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const mat=new THREE.SpriteMaterial({map:tex,depthTest:false,transparent:true});const sp=new THREE.Sprite(mat);sp.scale.set(1.1,.44,1);sp.userData.isLabel=true;return sp}
+function lineGuide(a,b,color){const geom=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...a),new THREE.Vector3(...b)]);return new THREE.Line(geom,new THREE.LineBasicMaterial({color,depthTest:false,transparent:true,opacity:.96}))}
+function updateWindowSummary(){const val=a=>$(a+'min').value+'…'+$(a+'max').value;$('windowSummary').textContent='x: '+val('x')+' · y: '+val('y')+' · z: '+val('z')}
+function setWindowExpanded(open){project.windowExpanded=open;$('windowPanel').classList.toggle('collapsed',!open);$('windowToggle').setAttribute('aria-expanded',String(open));$('windowToggle').querySelector('strong').textContent=(open?'▾':'▸')+' Viewing Window';save()}
+function updateWindowGuides(){const b=getBounds();updateWindowSummary();if(grid){scene.remove(grid);grid.geometry.dispose();grid.material.dispose()}const spanX=b.x[1]-b.x[0],spanY=b.y[1]-b.y[0];const span=Math.max(spanX,spanY);grid=new THREE.GridHelper(span,Math.max(1,Math.min(80,Math.round(span/tickStep(span)))) ,0x54718e,0x34475f);grid.position.set((b.x[0]+b.x[1])/2,0,-(b.y[0]+b.y[1])/2);grid.visible=project.showGrid!==false;scene.add(grid);
+while(axes.children.length){const ch=axes.children[0];axes.remove(ch);ch.geometry?.dispose();if(ch.material?.map)ch.material.map.dispose();ch.material?.dispose()}
+// The mathematical coordinates (x,y,z) map into Three.js as (x,z,-y).
+const axisData=[{key:'x',v:t=>[t,0,0],color:0xef6666,label:'#ffaaaa'},{key:'y',v:t=>[0,0,-t],color:0x70d68e,label:'#abefc0'},{key:'z',v:t=>[0,t,0],color:0x67a8fb,label:'#a6cbff'}];const labelScale=Math.max(.33,Math.min(1.7,Math.max(spanX,spanY,b.z[1]-b.z[0])/13));
+for(const ax of axisData){const [lo,hi]=b[ax.key];axes.add(lineGuide(ax.v(lo),ax.v(hi),ax.color));const letter=makeLabel(ax.key.toUpperCase(),ax.label);const end=ax.v(hi);letter.position.set(end[0]+.45*labelScale,end[1]+.45*labelScale,end[2]-.25*labelScale);letter.scale.set(1.5*labelScale,.6*labelScale,1);axes.add(letter);for(const val of tickNumbers(lo,hi)){const p=ax.v(val);const tick=labelScale*.13;const end=ax.key==='z'?[p[0]+tick,p[1],p[2]]:[p[0],p[1]+tick,p[2]];axes.add(lineGuide(p,end,ax.color));if(Math.abs(val)<1e-9&&ax.key!=='x')continue;const t=makeLabel(String(val),ax.label);const base=labelScale*.65;t.scale.set(1.1*labelScale,.44*labelScale,1);t.position.set(p[0]+(ax.key==='z'?base:0),p[1]+(ax.key==='z'?0:base),p[2]+(ax.key==='y'?-base:0));axes.add(t)}}
+}
+function fitCamera(){const b=getBounds(),cx=(b.x[0]+b.x[1])/2,cy=(b.y[0]+b.y[1])/2,cz=(b.z[0]+b.z[1])/2,span=Math.max(...['x','y','z'].map(a=>b[a][1]-b[a][0]));controls.target.set(cx,cz,-cy);camera.position.set(cx+span*1.25,cz+span*.95,-cy+span*1.3);camera.far=Math.max(200,span*20);camera.updateProjectionMatrix();controls.update();if(cameraMode!=='3d')setCameraView(cameraMode)}
+function updateOrthoFrustum(){if(!orthoCamera)return;const b=getBounds();const size=Math.max(...['x','y','z'].map(a=>b[a][1]-b[a][0]))*1.35;const aspect=viewportWidth/Math.max(1,viewportHeight);orthoCamera.left=-size*aspect/2;orthoCamera.right=size*aspect/2;orthoCamera.top=size/2;orthoCamera.bottom=-size/2;orthoCamera.updateProjectionMatrix()}
+function setCameraView(mode){
+ if(mode==='3d'){
+  camera=perspectiveCamera;controls.object=camera;controls.enableRotate=true;
+  if(previous3D){camera.position.copy(previous3D.position);camera.quaternion.copy(previous3D.quaternion);controls.target.copy(previous3D.target)}
+ }else{
+  if(cameraMode==='3d')previous3D={position:camera.position.clone(),quaternion:camera.quaternion.clone(),target:controls.target.clone()};
+  const b=getBounds();const center=new THREE.Vector3((b.x[0]+b.x[1])/2,(b.z[0]+b.z[1])/2,-(b.y[0]+b.y[1])/2);
+  const span=Math.max(...['x','y','z'].map(a=>b[a][1]-b[a][0]));
+  const direction=mode==='xy'?new THREE.Vector3(0,1,0):mode==='xz'?new THREE.Vector3(0,0,1):new THREE.Vector3(1,0,0);
+  orthoCamera.position.copy(center).addScaledVector(direction,span*3);
+  orthoCamera.up.set(mode==='xy'?0:0,mode==='xy'?0:1,mode==='xy'?-1:0);
+  orthoCamera.lookAt(center);updateOrthoFrustum();camera=orthoCamera;controls.object=camera;controls.target.copy(center);controls.enableRotate=false;
+ }
+ cameraMode=mode;controls.update();for(const id of ['3d','xy','xz','yz'])$('view'+id).classList.toggle('chosen',id===mode);
+}
+for(const id of ['3d','xy','xz','yz'])$('view'+id).onclick=()=>setCameraView(id);
+function meshFromField(fn,n,b){
+// Sample an extra layer beyond each viewing bound, then intersect the implicit
+// region with the viewing box. This draws cut faces for unbounded inequalities.
+const dx=(b.x[1]-b.x[0])/(n-1),dy=(b.y[1]-b.y[0])/(n-1),dz=(b.z[1]-b.z[0])/(n-1);
+const m=n+2,count=m*m*m,vals=new Float32Array(count),idx=(i,j,k)=>(k*m+j)*m+i;
+let positives=0,clipped=false,realInside=0;
+const boundsField=(x,y,z)=>Math.min(x-b.x[0],b.x[1]-x,y-b.y[0],b.y[1]-y,z-b.z[0],b.z[1]-z);
+for(let k=0;k<m;k++)for(let j=0;j<m;j++)for(let i=0;i<m;i++){
+ const x=b.x[0]+(i-1)*dx,y=b.y[0]+(j-1)*dy,z=b.z[0]+(k-1)*dz;
+ const f=fn(x,y,z);if(i>=1&&i<=n&&j>=1&&j<=n&&k>=1&&k<=n&&f>=0){realInside++;if(i===1||j===1||k===1||i===n||j===n||k===n)clipped=true}
+ const v=Math.min(f,boundsField(x,y,z));vals[idx(i,j,k)]=v;if(v>=0)positives++;
+}
+if(realInside===0)throw Error('No solid found in the current viewing window. Try expanding the bounds.');
+let vertices=[];const offsets=[[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0,0,1],[1,0,1],[1,1,1],[0,1,1]];
+for(let k=0;k<m-1;k++)for(let j=0;j<m-1;j++)for(let i=0;i<m-1;i++){
+ let p=offsets.map(([a,bb,c])=>[b.x[0]+(i+a-1)*dx,b.y[0]+(j+bb-1)*dy,b.z[0]+(k+c-1)*dz]);
+ let v=offsets.map(([a,bb,c])=>vals[idx(i+a,j+bb,k+c)]);let ins=v.map(t=>t>=0);if(ins.every(Boolean)||ins.every(t=>!t))continue;
+ for(const t of tetra){let intersections=[];for(const [a,bb] of edges){let ai=t[a],bi=t[bb];if(ins[ai]===ins[bi])continue;let f=v[ai]/(v[ai]-v[bi]);intersections.push([p[ai][0]+f*(p[bi][0]-p[ai][0]),p[ai][1]+f*(p[bi][1]-p[ai][1]),p[ai][2]+f*(p[bi][2]-p[ai][2])])}
+ if(intersections.length===3){for(const point of intersections)vertices.push(point[0],point[2],-point[1])}
+ else if(intersections.length===4){for(const t of [0,1,2,0,2,3])vertices.push(intersections[t][0],intersections[t][2],-intersections[t][1])}
+ }
+}
+if(vertices.length===0)throw Error('Region may be too small for this resolution. Increase mesh resolution.');
+let geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.computeVertexNormals();return {geo,triangles:vertices.length/9,positives,clipped}}
+
+function clearMeshes(){for(const solid of solids){scene.remove(solid);solid.geometry.dispose();solid.material.dispose()}solids=[]}
+function fallbackCopy(txt){const t=document.createElement('textarea');t.value=txt;t.style.position='fixed';t.style.top='0';document.body.append(t);t.focus();t.select();const ok=document.execCommand('copy');t.remove();if(!ok)throw Error('Clipboard blocked. Open in a normal browser or use HTTPS.') }
+function objectRow(obj,oi){const card=document.createElement('div');card.className='object-card';const expanded=expansion.has(obj)?expansion.get(obj):oi===0;card.classList.toggle('is-collapsed',!expanded);const head=document.createElement('div');head.className='object-head';const toggle=document.createElement('button');toggle.className='object-toggle';toggle.type='button';toggle.textContent=expanded?'▾ Collapse':'▸ Expand';toggle.title=expanded?'Collapse object':'Expand object';toggle.setAttribute('aria-label',toggle.title);toggle.setAttribute('aria-expanded',String(expanded));toggle.onclick=()=>{const open=card.classList.contains('is-collapsed');expansion.set(obj,open);card.classList.toggle('is-collapsed',!open);toggle.textContent=open?'▾ Collapse':'▸ Expand';toggle.title=open?'Collapse object':'Expand object';toggle.setAttribute('aria-label',toggle.title);toggle.setAttribute('aria-expanded',String(open))};head.append(toggle);const dot=document.createElement('span');dot.className='object-dot';dot.style.background=palette[oi%palette.length];head.append(dot);const name=document.createElement('input');name.type='text';name.value=obj.name;name.setAttribute('aria-label','Object name');name.addEventListener('input',()=>{obj.name=name.value;save()});head.append(name);const visibility=document.createElement('label');visibility.className='inlinecheck';const check=document.createElement('input');check.type='checkbox';check.checked=obj.visible!==false;check.addEventListener('change',()=>{obj.visible=check.checked;save();schedule()});visibility.append(check,document.createTextNode('Show'));head.append(visibility);
+const body=document.createElement('div');body.className='object-body';body.id='object-body-'+oi;toggle.setAttribute('aria-controls',body.id);const actions=document.createElement('div');actions.className='object-actions';const copy=document.createElement('button');copy.textContent='Copy to Desmos 3D';copy.title='Copy Desmos 3D LaTeX with separate restriction braces';copy.onclick=async()=>{try{const txt=desmosLatex(obj);if(navigator.clipboard?.writeText){try{await navigator.clipboard.writeText(txt)}catch(e){fallbackCopy(txt)}}else fallbackCopy(txt);say('Copied '+obj.name+' as Desmos LaTeX. Paste into desmos.com/3d.')}catch(e){say('Desmos copy: '+e.message+'.',true)}};copy.className='desmos-mini';copy.textContent='D';copy.title='Copy this object to Desmos 3D';copy.setAttribute('aria-label','Copy '+obj.name+' to Desmos 3D');head.append(copy);
+const del=document.createElement('button');del.className='delete';del.textContent='Delete';del.onclick=()=>{if(project.objects.length===1){say('Keep at least one object.',true);return}const removed=project.objects.splice(oi,1)[0];deletionStack.push({object:removed,index:oi});if(deletionStack.length>30)deletionStack.shift();showDeleteToast('Deleted '+removed.name+'.');refresh();save();schedule()};actions.append(del);body.append(actions);card.append(head);const summary=document.createElement('div');summary.className='object-summary';summary.textContent=obj.regions.length+' region'+(obj.regions.length===1?'':'s')+' · '+obj.regions.filter(r=>r.ignored===true).length+' ignored · Use Expand to edit';card.append(summary);obj.regions.forEach((region,ri)=>{const rc=document.createElement('div');rc.className='region-card';rc.classList.toggle('is-ignored',region.ignored===true);const title=document.createElement('div');title.className='region-title';const rname=document.createElement('input');rname.type='text';rname.value=region.name||'Region';rname.setAttribute('aria-label','Region name');rname.oninput=()=>{region.name=rname.value;save()};title.append(rname);if(ri>0){const op=document.createElement('select');for(const [val,label] of [['intersect','∩ Intersect'],['subtract','− Subtract'],['add','∪ Add']]){let option=document.createElement('option');option.value=val;option.textContent=label;op.append(option)}op.value=region.op||'intersect';op.onchange=()=>{region.op=op.value;save();schedule()};title.append(op)}else{const base=document.createElement('span');base.className='chip';base.textContent='Base region';title.append(base)}const remove=document.createElement('button');remove.textContent='×';remove.title='Remove region';remove.disabled=ri===0;remove.onclick=()=>{obj.regions.splice(ri,1);refresh();save();schedule()};title.append(remove);const ignoreLabel=document.createElement('label');ignoreLabel.className='inlinecheck';ignoreLabel.title='Temporarily exclude this region from modeling and Desmos export';const ignoreCheck=document.createElement('input');ignoreCheck.type='checkbox';ignoreCheck.checked=region.ignored===true;ignoreCheck.setAttribute('aria-label','Ignore region '+(region.name||ri+1));ignoreCheck.onchange=()=>{region.ignored=ignoreCheck.checked;rc.classList.toggle('is-ignored',region.ignored);ta.disabled=region.ignored;save();schedule()};ignoreLabel.append(ignoreCheck,document.createTextNode('Ignore'));title.append(ignoreLabel);rc.append(title);const ta=document.createElement('textarea');ta.spellcheck=false;ta.value=region.eq;ta.disabled=region.ignored===true;ta.setAttribute('aria-label',region.name+' inequalities');ta.addEventListener('input',()=>{region.eq=ta.value;save();schedule()});rc.append(ta);body.append(rc)});const buttons=document.createElement('div');buttons.className='mini-actions';for(const [op,label] of [['intersect','+ Intersect region'],['subtract','+ Subtract region'],['add','+ Add region']]){const btn=document.createElement('button');btn.textContent=label;btn.onclick=()=>{obj.regions.push(newRegion(op));refresh();save();schedule()};buttons.append(btn)}body.append(buttons);card.append(body);return card}
+function showDeleteToast(message){$('deleteText').textContent=message;$('deleteToast').classList.add('active')}
+function undoDeletion(){const entry=deletionStack.pop();if(!entry)return;project.objects.splice(Math.min(entry.index,project.objects.length),0,entry.object);expansion.set(entry.object,true);refresh();save();schedule();if(deletionStack.length){showDeleteToast('Restored '+entry.object.name+'. '+deletionStack.length+' earlier deletion(s) can still be undone.')}else $('deleteToast').classList.remove('active')}
+$('undoDelete').onclick=undoDeletion;
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!e.shiftKey){const tag=document.activeElement?.tagName;if(['INPUT','TEXTAREA'].includes(tag)||document.activeElement?.isContentEditable)return;if(deletionStack.length){e.preventDefault();undoDeletion()}}});
+$('windowToggle').onclick=()=>setWindowExpanded(!project.windowExpanded);
+$('showGrid').onchange=()=>{project.showGrid=$('showGrid').checked;if(grid)grid.visible=project.showGrid;save()};
+function refresh(){const list=$('objectList');list.replaceChildren();project.objects.forEach((obj,i)=>list.append(objectRow(obj,i)));$('objectCount').textContent=project.objects.length+' object'+(project.objects.length===1?'':'s');$('showParts').classList.toggle('chosen',project.mode==='parts');$('showFinal').classList.toggle('chosen',project.mode==='final')}
+async function render(){const token=++version;let compiled;try{compiled=project.objects.map(o=>o.visible===false?null:compileObject(o));getBounds()}catch(e){say(e.message,true);return}say('Rendering…');await new Promise(r=>setTimeout(r,35));if(token!==version)return;if(compiled.every(f=>f===null)){clearMeshes();$('meshInfo').textContent='No objects shown';say('All objects hidden. Check Show on any object to display it.');updateWindowGuides();return}try{let n=Number($('resolution').value),b=getBounds(),start=performance.now(),meshes=[];let fields=project.mode==='final'?[{fn:(x,y,z)=>{let v=-1000000;compiled.forEach(f=>{if(f)v=Math.max(v,f(x,y,z))});return v},color:'#8fbaf0'}]:compiled.map((fn,i)=>({fn,color:palette[i%palette.length]})).filter(v=>v.fn);let triangles=0;let notices=[];for(let i=0;i<fields.length;i++){let field=fields[i];try{let result=meshFromField(field.fn,n,b);let mesh=new THREE.Mesh(result.geo,new THREE.MeshStandardMaterial({color:field.color,metalness:.08,roughness:.47,side:THREE.DoubleSide,flatShading:false,transparent:false,opacity:1,depthWrite:true}));meshes.push(mesh);triangles+=result.triangles;if(result.clipped)notices.push('Preview clipped to viewing window; STL requires a bounded solid')}catch(e){notices.push((project.mode==='parts'?'Object '+(i+1)+': ':'')+e.message)}}if(token!==version){meshes.forEach(m=>{m.geometry.dispose();m.material.dispose()});return}clearMeshes();if(meshes.length){solids=meshes;solids.forEach(mesh=>scene.add(mesh));$('meshInfo').textContent=`${triangles.toLocaleString()} triangles · ${n}³ grid · ${Math.round(performance.now()-start)} ms`; say(notices.length?'Rendered with warnings: '+notices.join(' | '):'Model updated automatically.')}else{$('meshInfo').textContent='No geometry in viewing window';say(notices.join(' | ')||'No geometry in viewing window.')}updateWindowGuides()}catch(e){say(e.message,true)}}
+function schedule(){clearTimeout(renderTimer);renderTimer=setTimeout(render,600)}
+
+function resetTarget(){for(const m of targetMeshes){targetScene.remove(m);m.geometry.dispose();m.material.dispose()}targetMeshes=[];const challenge=challenges.find(c=>c.id===$('challengeSelect').value);if(!challenge)return;$('challengeTitle').textContent=challenge.title;$('challengePrompt').textContent=challenge.prompt;$('hintText').textContent=challenge.hint;$('hintText').style.display='none';$('challengeHint').textContent='Show hint';const completed=JSON.parse(localStorage.getItem('inequality-challenges-complete')||'{}');$('completeChallenge').textContent=completed[challenge.id]?'✓ Completed':"I've got it!";$('challengeProgress').textContent='Decide for yourself when your mathematical model meets the challenge.';try{const funcs=challenge.objects.map(compileObject);const fn=(x,y,z)=>Math.max(...funcs.map(f=>f(x,y,z)));const b={x:[-7,7],y:[-7,7],z:[-5,10]};const res=meshFromField(fn,50,b);const m=new THREE.Mesh(res.geo,new THREE.MeshStandardMaterial({color:0xe8a65b,side:THREE.DoubleSide,roughness:.55}));targetScene.add(m);targetMeshes.push(m);targetControls.target.set(0,2.4,0);targetCamera.position.set(16,13,17);targetControls.update();}catch(e){$('challengeProgress').textContent='Target error: '+e.message}}
+function setupChallenges(){for(const c of challenges){const o=document.createElement('option');o.value=c.id;o.textContent=c.title;$('challengeSelect').append(o)}$('studioMode').onchange=()=>{const active=$('studioMode').value==='challenge';document.querySelector('.app').classList.toggle('challenge-on',active);$('challengePicker').style.display=active?'block':'none';if(active)resetTarget();setTimeout(()=>{fitCamera()},80);};$('challengeSelect').onchange=resetTarget;$('challengeHint').onclick=()=>{const h=$('hintText');h.style.display=h.style.display==='none'?'block':'none';$('challengeHint').textContent=h.style.display==='none'?'Show hint':'Hide hint'};$('completeChallenge').onclick=()=>{const id=$('challengeSelect').value;const all=JSON.parse(localStorage.getItem('inequality-challenges-complete')||'{}');all[id]=!all[id];localStorage.setItem('inequality-challenges-complete',JSON.stringify(all));$('completeChallenge').textContent=all[id]?'✓ Completed':"I've got it!"};$('matchViews').onclick=()=>{targetCamera.position.copy(camera.position);targetControls.target.copy(controls.target);targetControls.update()}}
+// V4.8 exact planar STL path. Only convex intersections of affine half-spaces
+// qualify; any curved, union, or difference expression uses voxel fallback.
+function affineNode(node){
+  const zero=()=>({v:[0,0,0],c:0});
+  const add=(a,b,k=1)=>({v:a.v.map((x,i)=>x+k*b.v[i]),c:a.c+k*b.c});
+  const scale=(a,k)=>({v:a.v.map(x=>x*k),c:a.c*k});
+  const scalar=a=>a.v.every(v=>Math.abs(v)<1e-14);
+  if(node.type==='ParenthesisNode')return affineNode(node.content);
+  if(node.type==='ConstantNode'){const c=Number(node.value);return Number.isFinite(c)?{v:[0,0,0],c}:null}
+  if(node.type==='SymbolNode'){
+    if(['x','y','z'].includes(node.name)){const a=zero();a.v[['x','y','z'].indexOf(node.name)]=1;return a}
+    if(node.name==='pi')return {v:[0,0,0],c:Math.PI};
+    if(node.name==='e')return {v:[0,0,0],c:Math.E};
+    return null;
+  }
+  if(node.type!=='OperatorNode')return null;
+  const args=node.args.map(affineNode);
+  if(args.some(a=>a===null))return null;
+  if(node.op==='+')return args.length===1?args[0]:add(args[0],args[1]);
+  if(node.op==='-')return args.length===1?scale(args[0],-1):add(args[0],args[1],-1);
+  if(node.op==='*'){
+    if(scalar(args[0]))return scale(args[1],args[0].c);
+    if(scalar(args[1]))return scale(args[0],args[1].c);
+    return null;
+  }
+  if(node.op==='/')return scalar(args[1])&&Math.abs(args[1].c)>1e-14?scale(args[0],1/args[1].c):null;
+  if(node.op==='^')return scalar(args[1])&&args[1].c===1?args[0]:scalar(args[0])&&scalar(args[1])?{v:[0,0,0],c:Math.pow(args[0].c,args[1].c)}:null;
+  return null;
+}
+function linearHalfspaces(obj){
+  const active=(obj.regions||[]).filter(r=>r.ignored!==true);
+  if(!active.length||active.slice(1).some(r=>!['intersect','base'].includes(r.op)))return null;
+  const planes=[];
+  for(const region of active){
+    for(const term of parseConditions(region.eq)){
+      const l=affineNode(math.parse(term.a)),r=affineNode(math.parse(term.b));
+      if(!l||!r)return null;
+      const k=term.op.startsWith('<')?1:-1;
+      // n dot p <= d; a <= b -> (a-b) <= 0
+      const n=l.v.map((v,i)=>k*(v-r.v[i]));
+      const d=k*(r.c-l.c);
+      if(Math.hypot(...n)<1e-13){if(d<-1e-10)throw Error('Linear object is empty.');continue}
+      const length=Math.hypot(...n);planes.push({n:n.map(x=>x/length),d:d/length});
+    }
+  }
+  return planes;
+}
+const dot3=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const cross3=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const sub3=(a,b)=>a.map((v,i)=>v-b[i]);
+const distance3=(a,b)=>Math.hypot(...sub3(a,b));
+function intersect3(a,b,c){
+  const ab=cross3(b.n,c.n),bc=cross3(c.n,a.n),ca=cross3(a.n,b.n);
+  const det=dot3(a.n,ab);
+  if(Math.abs(det)<1e-10)return null;
+  return ab.map((x,i)=>(a.d*x+b.d*bc[i]+c.d*ca[i])/det);
+}
+function uniqPts(points,eps){
+  const out=[];for(const p of points)if(!out.some(q=>distance3(p,q)<eps))out.push(p);return out;
+}
+function cleanPolygon(points,eps){
+  let p=[];for(const q of points){if(!p.length||distance3(p[p.length-1],q)>eps)p.push(q)}
+  if(p.length>1&&distance3(p[0],p[p.length-1])<eps)p.pop();
+  return p;
+}
+function exactConvexTriangles(planes){
+  if(planes.length<4)throw Error('Need a bounded 3D solid, with enough independent planes.');
+  let vertices=[];
+  for(let i=0;i<planes.length;i++)for(let j=i+1;j<planes.length;j++)for(let k=j+1;k<planes.length;k++){
+    const p=intersect3(planes[i],planes[j],planes[k]);
+    if(p&&planes.every(h=>dot3(h.n,p)<=h.d+1e-7))vertices.push(p);
+  }
+  vertices=uniqPts(vertices,1e-6);
+  if(vertices.length<4)throw Error('No bounded full-dimensional solid found.');
+  const mins=[0,1,2].map(i=>Math.min(...vertices.map(v=>v[i])));
+  const maxs=[0,1,2].map(i=>Math.max(...vertices.map(v=>v[i])));
+  const span=Math.max(...mins.map((v,i)=>maxs[i]-v));
+  if(span<1e-7)throw Error('The object has zero volume.');
+  const pad=span*2+10;
+  const lo=mins.map(v=>v-pad),hi=maxs.map(v=>v+pad);
+  const [x0,y0,z0]=lo,[x1,y1,z1]=hi;
+  const v=(x,y,z)=>[x,y,z];
+  let faces=[
+    [v(x0,y0,z0),v(x0,y0,z1),v(x0,y1,z1),v(x0,y1,z0)],
+    [v(x1,y0,z0),v(x1,y1,z0),v(x1,y1,z1),v(x1,y0,z1)],
+    [v(x0,y0,z0),v(x1,y0,z0),v(x1,y0,z1),v(x0,y0,z1)],
+    [v(x0,y1,z0),v(x0,y1,z1),v(x1,y1,z1),v(x1,y1,z0)],
+    [v(x0,y0,z0),v(x0,y1,z0),v(x1,y1,z0),v(x1,y0,z0)],
+    [v(x0,y0,z1),v(x1,y0,z1),v(x1,y1,z1),v(x0,y1,z1)]
+  ];
+  const eps=span*1e-8;
+  for(const plane of planes){
+    let newFaces=[],cut=[];
+    for(const face of faces){
+      const next=[];
+      for(let i=0;i<face.length;i++){
+        const a=face[i],b=face[(i+1)%face.length];
+        const da=dot3(plane.n,a)-plane.d,db=dot3(plane.n,b)-plane.d;
+        if(da<=eps)next.push(a);
+        if((da< -eps&&db>eps)||(da>eps&&db< -eps)){
+          const t=da/(da-db),p=a.map((x,j)=>x+t*(b[j]-x));
+          next.push(p);cut.push(p);
+        }
+      }
+      const clean=cleanPolygon(next,eps);
+      if(clean.length>=3)newFaces.push(clean);
+    }
+    cut=uniqPts(cut,eps*2);
+    if(cut.length>=3){
+      const center=[0,1,2].map(i=>cut.reduce((s,p)=>s+p[i],0)/cut.length);
+      const reference=Math.abs(plane.n[0])<.8?[1,0,0]:[0,1,0];
+      const u=cross3(reference,plane.n),um=Math.hypot(...u);u.forEach((x,i)=>u[i]=x/um);
+      const w=cross3(plane.n,u);
+      cut.sort((a,b)=>Math.atan2(dot3(sub3(a,center),w),dot3(sub3(a,center),u))-Math.atan2(dot3(sub3(b,center),w),dot3(sub3(b,center),u)));
+      newFaces.push(cut);
+    }
+    faces=newFaces;
+    if(!faces.length)throw Error('Empty intersection of planes.');
+  }
+  // A bounded object must not retain an original cube face.
+  for(const face of faces){
+    if(face.some(p=>p.some((n,i)=>Math.abs(n-lo[i])<eps||Math.abs(n-hi[i])<eps)))throw Error('The linear region is unbounded. Add enclosing inequalities.');
+  }
+  const triangles=[];
+  for(const face of faces){
+    const unique=cleanPolygon(face,eps);
+    if(unique.length<3)continue;
+    for(let i=1;i<unique.length-1;i++){
+      const a=unique[0],b=unique[i],c=unique[i+1];
+      if(Math.hypot(...cross3(sub3(b,a),sub3(c,a)))>eps*eps)triangles.push([a,b,c]);
+    }
+  }
+  return {triangles,mins,maxs};
+}
+function binarySTLFromTriangles(tris,targetMM){
+  if(!tris.length)throw Error('Empty STL mesh.');
+  if(tris.length>1800000)throw Error('Mesh too large.');
+  const mins=[Infinity,Infinity,Infinity],maxs=[-Infinity,-Infinity,-Infinity];
+  for(const tri of tris)for(const p of tri)for(let axis=0;axis<3;axis++){
+    if(p[axis]<mins[axis])mins[axis]=p[axis];
+    if(p[axis]>maxs[axis])maxs[axis]=p[axis];
+  }
+  const extent=Math.max(...mins.map((a,i)=>maxs[i]-a));
+  if(!Number.isFinite(extent)||extent<1e-8)throw Error('Object has zero size.');
+  const scale=targetMM/extent;
+  const buf=new ArrayBuffer(84+tris.length*50),d=new DataView(buf);d.setUint32(80,tris.length,true);
+  let offset=84;
+  const write=a=>{for(const n of a){d.setFloat32(offset,n,true);offset+=4}};
+  for(const triangle of tris){
+    const pts3=triangle.map(p=>[(p[0]-mins[0])*scale,(p[2]-mins[2])*scale,-(p[1]-mins[1])*scale]);
+    const e=sub3(pts3[1],pts3[0]),f=sub3(pts3[2],pts3[0]),cross=cross3(e,f),mag=Math.hypot(...cross)||1;
+    write(cross.map(v=>v/mag));for(const p of pts3)write(p);d.setUint16(offset,0,true);offset+=2;
+  }
+  return buf;
+}
+function downloadSTLBuffer(buffer,basename){
+  const blob=new Blob([buffer],{type:'model/stl'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=basename+'.stl';a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);
+}
+
+// Sample signed inequalities directly at a shared 3D vertex lattice. The
+// tetrahedral triangulation linearly interpolates actual boundary crossings,
+// so facets follow the implicit surface rather than the faces of unit cubes.
+// Positive field values mean inside; outside-facing triangle winding is
+// computed from the inside/outside tetrahedron vertices.
+function smoothSurfaceTriangles(field,n,b){
+ const [nx,ny,nz]=[n+1,n+1,n+1];
+ const dx=(b.x[1]-b.x[0])/n,dy=(b.y[1]-b.y[0])/n,dz=(b.z[1]-b.z[0])/n;
+ const values=new Float32Array(nx*ny*nz);
+ const at=(i,j,k)=>(k*ny+j)*nx+i;
+ let occupied=0,boundary=false;
+ for(let k=0;k<nz;k++){
+   const z=b.z[0]+k*dz;
+   for(let j=0;j<ny;j++){
+     const y=b.y[0]+j*dy;
+     for(let i=0;i<nx;i++){
+       const val=field(b.x[0]+i*dx,y,z);
+       if(!Number.isFinite(val))throw Error('One of the inequalities is not finite inside the export window.');
+       values[at(i,j,k)]=val;
+       if(val>=0){occupied++;if(i===0||j===0||k===0||i===n||j===n||k===n)boundary=true;}
+     }
+   }
+ }
+ if(!occupied)throw Error('No solid found in the export window. Check the window bounds.');
+ if(boundary)throw Error('The solid touches the export window. Expand the viewing bounds to enclose the entire solid.');
+ const corner=[[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0,0,1],[1,0,1],[1,1,1],[0,1,1]];
+ const triangles=[];
+ const crossAt=(a,b,p,v)=>{
+   const t=v[a]/(v[a]-v[b]);
+   return [p[a][0]+t*(p[b][0]-p[a][0]),p[a][1]+t*(p[b][1]-p[a][1]),p[a][2]+t*(p[b][2]-p[a][2])];
+ };
+ const addTri=(a,b,c,inside,outside)=>{
+   const u=sub3(b,a),v=sub3(c,a),normal=cross3(u,v);
+   if(Math.hypot(...normal)<1e-10)return;
+   const direction=sub3(outside,inside);
+   if(normal[0]*direction[0]+normal[1]*direction[1]+normal[2]*direction[2]<0)triangles.push([a,c,b]);
+   else triangles.push([a,b,c]);
+   if(triangles.length>1800000)throw Error('Smooth mesh exceeds 1.8 million triangles; reduce export detail.');
+ };
+ for(let k=0;k<n;k++)for(let j=0;j<n;j++)for(let i=0;i<n;i++){
+   const v=corner.map(([a,bb,c])=>values[at(i+a,j+bb,k+c)]);
+   let mask=0;for(let q=0;q<8;q++)if(v[q]>=0)mask|=1<<q;
+   if(mask===0||mask===255)continue;
+   const p=corner.map(([a,bb,c])=>[b.x[0]+(i+a)*dx,b.y[0]+(j+bb)*dy,b.z[0]+(k+c)*dz]);
+   for(const tet of tetra){
+     const ins=tet.filter(id=>v[id]>=0),outs=tet.filter(id=>v[id]<0);
+     if(!ins.length||!outs.length)continue;
+     const avg=ids=>ids.reduce((sum,id)=>sum.map((a,c)=>a+p[id][c]),[0,0,0]).map(x=>x/ids.length);
+     const centroidIn=avg(ins),centroidOut=avg(outs);
+     if(ins.length===1){const a=ins[0];addTri(crossAt(a,outs[0],p,v),crossAt(a,outs[1],p,v),crossAt(a,outs[2],p,v),centroidIn,centroidOut);}
+     else if(outs.length===1){const a=outs[0];addTri(crossAt(a,ins[0],p,v),crossAt(a,ins[1],p,v),crossAt(a,ins[2],p,v),centroidIn,centroidOut);}
+     else{
+       const [a,c]=ins,[d,e]=outs;
+       const ad=crossAt(a,d,p,v),ae=crossAt(a,e,p,v),cd=crossAt(c,d,p,v),ce=crossAt(c,e,p,v);
+       addTri(ad,ae,cd,centroidIn,centroidOut);
+       addTri(ae,ce,cd,centroidIn,centroidOut);
+     }
+   }
+ }
+ if(!triangles.length)throw Error('The solid is too thin for this export resolution. Increase detail or enlarge the feature.');
+ return triangles;
+}
+async function exportVoxelSTL(){
+ const button=$('exportSTL');button.disabled=true;button.textContent='Preparing STL…';await new Promise(r=>setTimeout(r,35));
+ try{
+  const visible=project.objects.filter(o=>o.visible!==false&&o.regions?.some(r=>r.ignored!==true));
+  const targetMM=Number($('exportMM').value);
+  if(!Number.isFinite(targetMM)||targetMM<10||targetMM>250)throw Error('Longest side must be between 10 and 250 mm.');
+  if(visible.length===1){
+   const planes=linearHalfspaces(visible[0]);
+   if(planes){
+    const exact=exactConvexTriangles(planes);
+    downloadSTLBuffer(binarySTLFromTriangles(exact.triangles,targetMM),'inequality-model-exact');
+    say('Exact planar STL: '+exact.triangles.length+' triangles, '+targetMM+' mm longest side.');
+    return;
+   }
+  }
+  const funcs=visible.map(compileObject).filter(Boolean);
+  if(!funcs.length)throw Error('No visible objects to export.');
+  const field=(x,y,z)=>{let val=-Infinity;for(const f of funcs)val=Math.max(val,f(x,y,z));return val};
+  const n=Number($('exportN').value),bounds=getBounds();
+  const triangles=smoothSurfaceTriangles(field,n,bounds);
+  const buffer=binarySTLFromTriangles(triangles,targetMM);
+  downloadSTLBuffer(buffer,'inequality-model-smooth-'+n);
+  say('Smooth interpolated STL: '+triangles.length.toLocaleString()+' triangles at '+n+'³ resolution, '+targetMM+' mm longest side. Inspect for thin features and slicing errors.');
+ }catch(e){say('STL export: '+e.message,true)}finally{button.disabled=false;button.textContent='Export STL'}
+}
+$('exportSTL').onclick=exportVoxelSTL;
+
+function projectData(){return {app:'3D Inequality Modeling Studio',version:7,objects:project.objects,mode:project.mode,showGrid:project.showGrid,windowExpanded:project.windowExpanded,resolution:Number($('resolution').value),bounds:Object.fromEntries(['x','y','z'].map(a=>[a,[$(a+'min').value,$(a+'max').value]]))}}
+function save(){try{localStorage.setItem('inequality-studio-v4',JSON.stringify(projectData()));$('saveState').textContent='✓ Autosaved on this device'}catch(e){$('saveState').textContent='Local save unavailable — download a backup'}}
+function restoreBounds(data){if(!data||typeof data!=='object')return;for(const a of ['x','y','z'])if(Array.isArray(data[a])&&data[a].length===2){$(a+'min').value=data[a][0];$(a+'max').value=data[a][1]}}
+function loadData(d){if(Array.isArray(d.objects)&&d.objects.length){project.objects=d.objects.map(o=>({name:String(o.name||'Object'),visible:o.visible!==false,regions:Array.isArray(o.regions)&&o.regions.length?o.regions.map((r,i)=>({name:String(r.name||'Region'),op:i===0?'base':(['add','subtract','intersect'].includes(r.op)?r.op:'intersect'),eq:String(r.eq||''),ignored:r.ignored===true})):[newRegion('base')]}));project.mode='parts';project.showGrid=d.showGrid!==false;project.windowExpanded=d.windowExpanded===true;$('showGrid').checked=project.showGrid;setWindowExpanded(project.windowExpanded)}else if(typeof d.equations==='string'){project.objects=[{name:'Imported model',visible:true,regions:[{name:'Original region',op:'base',eq:d.equations}]}];project.mode='parts'}else throw Error('Not a supported project file');$('resolution').value=Math.max(18,Math.min(110,Number(d.resolution)||44));$('resolutionLabel').textContent=$('resolution').value+'³';restoreBounds(d.bounds);refresh();save();render();fitCamera()}
+$('examples').onchange=e=>{if(!starter[e.target.value])return;project.objects=structuredClone(starter[e.target.value]);project.mode='parts';if(e.target.value==='pipe'||e.target.value==='vase'){$('zmin').value=-2;$('zmax').value=9;$('xmin').value=-6;$('xmax').value=6;$('ymin').value=-6;$('ymax').value=6}if(e.target.value==='poly'){$('xmin').value=-3;$('xmax').value=34;$('ymin').value=-3;$('ymax').value=37;$('zmin').value=-3;$('zmax').value=40}refresh();save();render();fitCamera()};
+$('addObject').onclick=()=>{const created={name:'Object '+(project.objects.length+1),visible:true,regions:[newRegion('base')]};project.objects.forEach(o=>expansion.set(o,false));expansion.set(created,true);project.objects.push(created);refresh();save();schedule()};
+$('showParts').onclick=()=>{project.mode='parts';refresh();save();render()};$('showFinal').onclick=()=>{project.mode='final';refresh();save();render()};
+$('resolution').addEventListener('input',()=>{$('resolutionLabel').textContent=$('resolution').value+'³'});$('resolution').addEventListener('change',()=>{save();render()});$('fitBounds').onclick=fitCamera;$('defaultBounds').onclick=()=>{for(const a of ['x','y','z']){$(a+'min').value=(a==='z'?-2:-6);$(a+'max').value=(a==='z'?8:6)}save();render();fitCamera()};for(const a of ['x','y','z'])for(const side of ['min','max'])$(a+side).addEventListener('change',()=>{save();render()});
+$('download').onclick=()=>{let blob=new Blob([JSON.stringify(projectData(),null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='inequality-studio-project.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+$('open').onclick=()=>$('file').click();$('file').onchange=async e=>{try{let file=e.target.files[0];if(file)loadData(JSON.parse(await file.text()))}catch(err){say('Cannot open project: '+err.message,true)}e.target.value=''};
+try{let saved=JSON.parse(localStorage.getItem('inequality-studio-v4')||'null');if(!saved){saved=JSON.parse(localStorage.getItem('inequality-studio-v1')||'null')}if(saved){if(Array.isArray(saved.objects)){project.objects=saved.objects;project.mode='parts';project.showGrid=saved.showGrid!==false;project.windowExpanded=saved.windowExpanded===true}else if(typeof saved.equations==='string')project.objects=[{name:'Imported V3 object',visible:true,regions:[{name:'Base',op:'base',eq:saved.equations}]}];if(saved.resolution)$('resolution').value=saved.resolution;restoreBounds(saved.bounds)}}catch(e){}$('showGrid').checked=project.showGrid;setWindowExpanded(project.windowExpanded);$('resolutionLabel').textContent=$('resolution').value+'³';refresh();init();setupChallenges();render();
+</script></body></html>
