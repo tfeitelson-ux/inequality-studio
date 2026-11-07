@@ -118,7 +118,7 @@ header .brand{min-width:230px}header .brand h1{font-size:16px}header .brand smal
 </head>
 <body>
 <header>
- <div class="brand"><h1>◈ 3D Inequality Modeling Studio <span class="chip">Prototype 4.19</span></h1><small>Build 3D solids with mathematics, not CAD commands</small></div>
+ <div class="brand"><h1>◈ 3D Inequality Modeling Studio <span class="chip">Prototype 4.20</span></h1><small>Build 3D solids with mathematics, not CAD commands</small></div>
  <div class="toolbar-project"><span class="toolbar-caption">CURRENT PROJECT</span><strong id="toolbarProjectName">Loading…</strong><small id="saveState">Checking save status…</small></div><button id="toolbarNewProject" type="button" class="primary toolbar-library-btn" title="Create a new project">+ New Project</button>
  <div class="toolbar-mode"><label for="studioMode">Studio mode</label><span id="toolbarModeSlot"></span>
 <label class="toolbar-resolution" title="Rebuild your 3D preview at higher resolution. Printing detail is separate."><input type="checkbox" id="highResolution"> High Resolution (Slower)</label></div>
@@ -364,7 +364,46 @@ function refresh(){const list=$('objectList');list.replaceChildren();project.obj
 async function render(){const token=++version;let compiled;try{compiled=project.objects.map((o,oi)=>{if(o.visible===false)return null;try{return compileObject(o)}catch(e){e.objectIndex=oi;throw e}});getBounds()}catch(e){if(Number.isInteger(e.objectIndex)&&Number.isInteger(e.regionIndex)){const card=$('objectList').children[e.objectIndex];const area=card?.querySelectorAll('.region-card textarea')[e.regionIndex];if(area){area.classList.add('equation-invalid');area.title=e.message;}}say('Check inequality: '+e.message+'. Last valid model retained.',true);return}say('Rendering…');await new Promise(r=>setTimeout(r,35));if(token!==version)return;if(compiled.every(f=>f===null)){clearMeshes();$('meshInfo').textContent='Ready for equations';say('Add inequalities to an object to build your model.');updateWindowGuides();return}try{let n=$('highResolution').checked?110:Number($('resolution').value),b=getBounds(),start=performance.now(),meshes=[];let fields=project.mode==='final'?[{fn:(x,y,z)=>{let v=-1000000;compiled.forEach(f=>{if(f)v=Math.max(v,f(x,y,z))});return v},color:'#8fbaf0'}]:compiled.map((fn,i)=>({fn,color:palette[i%palette.length]})).filter(v=>v.fn);let triangles=0;let notices=[];for(let i=0;i<fields.length;i++){let field=fields[i];try{let result=meshFromField(field.fn,n,b);let mesh=new THREE.Mesh(result.geo,new THREE.MeshStandardMaterial({color:field.color,metalness:.08,roughness:.47,side:THREE.DoubleSide,flatShading:false,transparent:false,opacity:1,depthWrite:true}));meshes.push(mesh);triangles+=result.triangles;if(result.clipped)notices.push('Preview clipped to viewing window; STL requires a bounded solid')}catch(e){notices.push((project.mode==='parts'?'Object '+(i+1)+': ':'')+e.message)}}if(token!==version){meshes.forEach(m=>{m.geometry.dispose();m.material.dispose()});return}clearMeshes();if(meshes.length){solids=meshes;solids.forEach(mesh=>scene.add(mesh));$('meshInfo').textContent=`${triangles.toLocaleString()} triangles · ${n}³ grid · ${Math.round(performance.now()-start)} ms`; say(notices.length?'Rendered with warnings: '+notices.join(' | '):'Model updated automatically.')}else{$('meshInfo').textContent='No geometry in viewing window';say(notices.join(' | ')||'No geometry in viewing window.')}updateWindowGuides()}catch(e){say(e.message,true)}}
 function schedule(){clearTimeout(renderTimer);renderTimer=setTimeout(render,600)}
 
+// Challenge reference geometry is cached for the session. Certain mathematically
+// exact solids use exact target geometry rather than a sampled implicit field.
+// This changes reference presentation only; student modeling still uses inequalities.
 const targetGeometryCache=new Map();
+function mathToThree(x,y,z){return new THREE.Vector3(x,z,-y)}
+function makeExactPyramidTarget(){
+ // Challenge 12: the source equations imply y=0, |x|<=1/2, |z|<=1/2
+ // at the base and a tip at (0,sqrt(3)/2,0).
+ const r=0.5,h=Math.sqrt(3)/2;
+ const pts=[mathToThree(-r,0,-r),mathToThree(r,0,-r),mathToThree(r,0,r),mathToThree(-r,0,r),mathToThree(0,h,0)];
+ const faces=[[0,2,1],[0,3,2],[0,1,4],[1,2,4],[2,3,4],[3,0,4]];
+ const positions=[];
+ for(const face of faces)for(const i of face)positions.push(...pts[i].toArray());
+ const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geo.computeVertexNormals();
+ return {parts:[{geo,color:0xe8a65b,opacity:1}],exact:true};
+}
+function makeCrossedDisksTarget(){
+ // Challenge 9 has THREE saved objects: a horizontal disk, a perpendicular
+ // disk, AND a sphere. Render their separate surfaces instead of hiding both
+ // disks inside a single opaque union. Each follows the original equations.
+ const horizontal=new THREE.CylinderGeometry(3,3,1,160,1,false);
+ const vertical=new THREE.CylinderGeometry(3,3,1,160,1,false);
+ vertical.rotateX(Math.PI/2);
+ const sphere=new THREE.SphereGeometry(3,128,80);
+ return {parts:[
+  {geo:horizontal,color:0xe8a65b,opacity:1},
+  {geo:vertical,color:0x76c2e8,opacity:1},
+  {geo:sphere,color:0xb7a8ef,opacity:0.22}
+ ],exact:true};
+}
+function makeChallengeTarget(challenge){
+ if(challenge.id==='challenge-09')return makeCrossedDisksTarget();
+ if(challenge.id==='challenge-12')return makeExactPyramidTarget();
+ const funcs=challenge.objects.filter(o=>o.visible!==false).map(compileObject).filter(Boolean);
+ if(!funcs.length)throw Error('Challenge has no visible objects.');
+ const fn=(x,y,z)=>{let val=-Infinity;for(const f of funcs)val=Math.max(val,f(x,y,z));return val};
+ const b=challenge.bounds?Object.fromEntries(['x','y','z'].map(a=>[a,challenge.bounds[a].map(Number)])):{x:[-7,7],y:[-7,7],z:[-5,10]};
+ const res=meshFromField(fn,110,b);
+ return {parts:[{geo:res.geo,color:0xe8a65b,opacity:1}],clipped:res.clipped};
+}
 function resetTarget(){
  for(const m of targetMeshes){targetScene.remove(m);m.material.dispose()}
  targetMeshes=[];
@@ -373,32 +412,31 @@ function resetTarget(){
  $('challengeTitle').textContent=challenge.title;
  $('challengePrompt').textContent=challenge.prompt;
  $('hintText').textContent=challenge.hint;
- $('hintText').style.display='none';
- $('challengeHint').textContent='Show hint';
+ $('hintText').style.display='none';$('challengeHint').textContent='Show hint';
  const completed=JSON.parse(localStorage.getItem('inequality-challenges-complete')||'{}');
  $('completeChallenge').textContent=completed[challenge.id]?'✓ Completed':"I've got it!";
  $('challengeProgress').textContent='Decide for yourself when your mathematical model meets the challenge.';
  try{
   let record=targetGeometryCache.get(challenge.id);
   if(!record){
-   const funcs=challenge.objects.filter(o=>o.visible!==false).map(compileObject);
-   if(!funcs.length)throw Error('Challenge has no visible objects.');
-   // Each challenge target represents the union of every saved object.
-   const fn=(x,y,z)=>{let val=-Infinity;for(const f of funcs)val=Math.max(val,f(x,y,z));return val};
-   const b=challenge.bounds?Object.fromEntries(['x','y','z'].map(a=>[a,challenge.bounds[a].map(Number)])):{x:[-7,7],y:[-7,7],z:[-5,10]};
-   const res=meshFromField(fn,110,b);
-   record={geo:res.geo,b,clipped:res.clipped};
-   if(targetGeometryCache.size>=3){const first=targetGeometryCache.keys().next().value;targetGeometryCache.get(first).geo.dispose();targetGeometryCache.delete(first)}
+   record=makeChallengeTarget(challenge);
+   // Keep enough models cached to switch quickly but avoid unlimited GPU memory.
+   if(targetGeometryCache.size>=4){const old=targetGeometryCache.keys().next().value;
+    for(const part of targetGeometryCache.get(old).parts)part.geo.dispose();targetGeometryCache.delete(old)}
    targetGeometryCache.set(challenge.id,record);
-  }else{
-   targetGeometryCache.delete(challenge.id);targetGeometryCache.set(challenge.id,record);
+  }else{targetGeometryCache.delete(challenge.id);targetGeometryCache.set(challenge.id,record)}
+  const bounds=new THREE.Box3();
+  for(const part of record.parts){
+   const transparent=part.opacity<1;
+   const material=new THREE.MeshStandardMaterial({color:part.color,side:THREE.DoubleSide,roughness:.65,metalness:0,flatShading:false,transparent,opacity:part.opacity,depthWrite:!transparent});
+   const m=new THREE.Mesh(part.geo,material);
+   if(transparent){m.renderOrder=4;material.depthTest=true}
+   targetScene.add(m);targetMeshes.push(m);
+   part.geo.computeBoundingBox();bounds.union(part.geo.boundingBox);
   }
-  const m=new THREE.Mesh(record.geo,new THREE.MeshStandardMaterial({color:0xe8a65b,side:THREE.DoubleSide,roughness:.7,metalness:0,flatShading:false}));
-  targetScene.add(m);targetMeshes.push(m);
   if(record.clipped)$('challengeProgress').textContent='Warning: reference target touches the viewing-window boundary; check its saved bounds.';
-  // Frame the actual model tightly; the saved viewing window is often much larger.
-  record.geo.computeBoundingBox();
-  const box=record.geo.boundingBox,center=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3());
+  if(challenge.id==='challenge-09')$('challengeProgress').textContent='The saved target includes two disks and a sphere. The sphere is translucent so all three objects remain visible.';
+  const center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3());
   const radius=Math.max(.2,size.length()/2);
   const vFov=THREE.MathUtils.degToRad(targetCamera.fov);
   const hFov=2*Math.atan(Math.tan(vFov/2)*Math.max(.3,targetCamera.aspect));
@@ -406,9 +444,7 @@ function resetTarget(){
   const direction=new THREE.Vector3(1.25,.90,1.40).normalize();
   targetControls.target.copy(center);
   targetCamera.position.copy(center).addScaledVector(direction,distance);
-  targetCamera.near=Math.max(.01,distance-radius*2.2);
-  targetCamera.far=Math.max(100,distance+radius*5);
-  targetCamera.updateProjectionMatrix();
+  targetCamera.near=Math.max(.01,distance/250);targetCamera.far=distance*20;targetCamera.updateProjectionMatrix();
   targetControls.update();
  }catch(e){$('challengeProgress').textContent='Target error: '+e.message}
 }
