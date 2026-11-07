@@ -40,24 +40,23 @@
 
 .library-panel{margin-top:20px;border:1px solid #507394;border-radius:12px;padding:13px;background:#15283f}.library-panel h2{margin-top:0}.library-panel select{width:100%;margin:5px 0 10px}.library-panel .buttonrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.library-panel button{font-size:12px}.library-panel p{font-size:12px;color:#b9d2e7;line-height:1.5}.library-panel .delete{border-color:#94566b;color:#ffb6c5}.file-status{font-size:12px;line-height:1.45;border-radius:8px;padding:9px 11px;background:#213b52;color:#d4e9ff;margin-top:6px}.file-status.warning{background:#483529;color:#ffdc9d}.file-status.success{background:#163b37;color:#b8f4df}.file-status.error{background:#4b2933;color:#ffbdc4}
 
-/* A genuine native file input overlays the styled Open button. On macOS this
-   avoids fragile programmatic clicks on a display:none input. */
-.native-file-picker{position:relative;display:inline-flex;align-items:center;justify-content:center;border:1px solid #446080;background:#243b58;color:white;padding:9px 12px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer;overflow:hidden;min-height:35px}
-.native-file-picker:hover{background:#345374}
-.native-file-picker:focus-within{outline:2px solid #78b7f5;outline-offset:2px}
-.native-file-picker input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:80px}
+/* Visible native browser file control. No transparent overlay or synthetic click. */
+.plain-file-picker{display:flex;flex-direction:column;gap:5px;width:100%;margin:3px 0 5px}
+.plain-file-picker label{font-size:12px;font-weight:650;color:#d9e8fa}
+.plain-file-picker input[type=file]{display:block;position:static;opacity:1;width:100%;height:auto;min-height:38px;padding:7px;border:1px solid #567596;border-radius:8px;background:#0b1929;color:#e5f1ff;font-size:12px;cursor:pointer}
+.plain-file-picker input[type=file]::file-selector-button{border:1px solid #53769c;background:#2c5076;color:#fff;border-radius:6px;padding:6px 9px;margin-right:10px;cursor:pointer}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/mathjs@13.2.0/lib/browser/math.js"></script>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 </head>
 <body>
-<header><div><h1>◈ 3D Inequality Modeling Studio <span class="chip">Prototype 4.12.5</span></h1><small>Build 3D solids with mathematics, not CAD commands</small></div><small id="saveState">Project autosaved locally</small></header>
+<header><div><h1>◈ 3D Inequality Modeling Studio <span class="chip">Prototype 4.12.6</span></h1><small>Build 3D solids with mathematics, not CAD commands</small></div><small id="saveState">Project autosaved locally</small></header>
 <div class="app">
 <aside class="panel">
 <div class="challenge-box"><label for="studioMode">Studio mode</label><select id="studioMode"><option value="free">Free Build</option><option value="challenge">Challenges</option></select><div id="challengePicker" style="display:none"><label for="challengeSelect" style="margin-top:9px">Choose a challenge</label><select id="challengeSelect"></select><p style="margin-bottom:0">The target is a separate rotatable 3D object; dimensions don't need to match exactly.</p></div></div>
 <section class="library-panel"><h2>My Projects <span class="chip">On this device</span></h2><label for="projectSelect">Current project</label><select id="projectSelect" aria-label="Select saved project"></select><div class="buttonrow"><button class="primary" id="newProject">+ New project</button><button id="renameProject">Rename</button><button id="duplicateProject">Duplicate</button><button class="delete" id="deleteProject">Delete</button></div><div class="file-status" id="fileStatus" role="status">Checking local file connection…</div>
 <div class="buttonrow"><button class="primary" id="saveFile">Save to file</button><button id="saveFileAs">Save As…</button><button id="reconnectFile" style="display:none">Reconnect file</button></div>
-<div class="buttonrow"><label class="native-file-picker" title="Select a saved .json or .ineqstudio project">Open local file<input id="localFileInput" type="file" aria-label="Open local project file"></label><button id="download">Download backup</button><button id="open">Import project file</button><input id="file" type="file"></div>
+<div class="buttonrow"><div class="plain-file-picker"><label for="localFileInput">Open local project file</label><input id="localFileInput" type="file" aria-label="Choose a project file to open"></div><button id="download">Download backup</button><button id="open">Import project file</button><input id="file" type="file"></div>
 <div id="dropProject" tabindex="0" style="border:1px dashed #638bb5;border-radius:8px;padding:10px;margin:8px 0;font-size:12px;color:#c8e0f5;text-align:center">Or drag a saved .json / .ineqstudio file here to open it</div>
 <p><strong>Saving:</strong> Changes are always copied to this browser. Once you connect a project file, changes also autosave to that file while permission is available. If the file connection is interrupted, reconnect it or download a backup. Cloud sync is not yet enabled.</p></section>
 <h2>Starter projects</h2><select id="examples" aria-label="Starter project"><option value="">Choose a starter…</option><option value="sphere">Sphere</option><option value="pipe">Hollow cylinder</option><option value="vase">Wavy hollow vase</option><option value="two">Two separate objects</option><option value="torus">Torus</option><option value="box">Rectangular block</option><option value="poly">Six-inequality polyhedron</option></select>
@@ -574,7 +573,7 @@ async function importChosenFile(file){
   say('Opened project: '+item.name);
  }catch(err){const message='Cannot open '+file.name+': '+err.message;destination.textContent=message;destination.className='file-status error';say(message,true)}
 }
-$('localFileInput').addEventListener('change',async e=>{const file=e.target.files?.[0];try{await importChosenFile(file)}finally{e.target.value=''}});
+$('localFileInput').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file){$('fileStatus').textContent='No file selected. You can also drag a project file into the box below.';return;}await importChosenFile(file);});
 const dropProject=$('dropProject');
 for(const eventName of ['dragenter','dragover'])dropProject.addEventListener(eventName,e=>{e.preventDefault();dropProject.style.background='#244565';});
 for(const eventName of ['dragleave','drop'])dropProject.addEventListener(eventName,e=>{e.preventDefault();dropProject.style.background='';});
