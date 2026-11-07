@@ -45,19 +45,38 @@
 .plain-file-picker label{font-size:12px;font-weight:650;color:#d9e8fa}
 .plain-file-picker input[type=file]{display:block;position:static;opacity:1;width:100%;height:auto;min-height:38px;padding:7px;border:1px solid #567596;border-radius:8px;background:#0b1929;color:#e5f1ff;font-size:12px;cursor:pointer}
 .plain-file-picker input[type=file]::file-selector-button{border:1px solid #53769c;background:#2c5076;color:#fff;border-radius:6px;padding:6px 9px;margin-right:10px;cursor:pointer}
+
+.project-drop-zone{border:2px dashed #668fbc;border-radius:9px;padding:14px 10px;margin:9px 0;color:#d9ecff;background:#102338;text-align:center;font-size:12px;min-height:44px}
+.project-drop-zone.dragging{background:#294e74;border-color:#a4d5ff}
+.open-project-modal{width:min(460px,calc(100vw - 30px));max-height:80vh;overflow:auto;border:1px solid #739ac5;border-radius:14px;background:#15283f;color:#e8f3ff;padding:18px;box-shadow:0 12px 35px #0009}
+.open-project-modal::backdrop{background:#0009}
+.open-project-modal p{font-size:13px;line-height:1.45;color:#c7d9ef}
+.open-project-modal .modal-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.open-project-modal .modal-drop{padding:40px 10px;font-size:15px}
+.open-project-modal input[type=file]{width:100%;font-size:13px;color:#dbefff}
+.open-project-modal .picker-note{font-size:11px}
+#modalOpenStatus{min-height:1em}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/mathjs@13.2.0/lib/browser/math.js"></script>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 </head>
 <body>
-<header><div><h1>◈ 3D Inequality Modeling Studio <span class="chip">Prototype 4.12.6</span></h1><small>Build 3D solids with mathematics, not CAD commands</small></div><small id="saveState">Project autosaved locally</small></header>
+<header><div><h1>◈ 3D Inequality Modeling Studio <span class="chip">Prototype 4.12.7</span></h1><small>Build 3D solids with mathematics, not CAD commands</small></div><small id="saveState">Project autosaved locally</small></header>
 <div class="app">
 <aside class="panel">
 <div class="challenge-box"><label for="studioMode">Studio mode</label><select id="studioMode"><option value="free">Free Build</option><option value="challenge">Challenges</option></select><div id="challengePicker" style="display:none"><label for="challengeSelect" style="margin-top:9px">Choose a challenge</label><select id="challengeSelect"></select><p style="margin-bottom:0">The target is a separate rotatable 3D object; dimensions don't need to match exactly.</p></div></div>
 <section class="library-panel"><h2>My Projects <span class="chip">On this device</span></h2><label for="projectSelect">Current project</label><select id="projectSelect" aria-label="Select saved project"></select><div class="buttonrow"><button class="primary" id="newProject">+ New project</button><button id="renameProject">Rename</button><button id="duplicateProject">Duplicate</button><button class="delete" id="deleteProject">Delete</button></div><div class="file-status" id="fileStatus" role="status">Checking local file connection…</div>
 <div class="buttonrow"><button class="primary" id="saveFile">Save to file</button><button id="saveFileAs">Save As…</button><button id="reconnectFile" style="display:none">Reconnect file</button></div>
-<div class="buttonrow"><div class="plain-file-picker"><label for="localFileInput">Open local project file</label><input id="localFileInput" type="file" aria-label="Choose a project file to open"></div><button id="download">Download backup</button><button id="open">Import project file</button><input id="file" type="file"></div>
-<div id="dropProject" tabindex="0" style="border:1px dashed #638bb5;border-radius:8px;padding:10px;margin:8px 0;font-size:12px;color:#c8e0f5;text-align:center">Or drag a saved .json / .ineqstudio file here to open it</div>
+<div class="buttonrow"><button type="button" id="openProjectDialog" class="primary">Open project…</button><button id="download">Download backup</button></div>
+<div id="dropProject" tabindex="0" role="button" aria-label="Open a project by dragging a file here" class="project-drop-zone">Drag a saved .json or .ineqstudio file here to open it</div>
+<dialog id="openProjectModal" aria-labelledby="openProjectModalTitle" class="open-project-modal">
+  <div class="modal-head"><strong id="openProjectModalTitle">Open a Studio project</strong><button id="closeProjectModal" type="button" aria-label="Close">✕</button></div>
+  <p>Drag a saved project from Finder into the box below. This uses the same import method that worked on your Mac.</p>
+  <div id="modalDropProject" class="project-drop-zone modal-drop" tabindex="0">Drop project file here</div>
+  <p class="picker-note">Alternatively, use the standard Choose File control. On some Macs its file list may hide project files; drag-and-drop is the reliable option.</p>
+  <input id="localFileInput" type="file" aria-label="Choose a project file to open" />
+  <p id="modalOpenStatus" role="status" aria-live="polite"></p>
+</dialog>
 <p><strong>Saving:</strong> Changes are always copied to this browser. Once you connect a project file, changes also autosave to that file while permission is available. If the file connection is interrupted, reconnect it or download a backup. Cloud sync is not yet enabled.</p></section>
 <h2>Starter projects</h2><select id="examples" aria-label="Starter project"><option value="">Choose a starter…</option><option value="sphere">Sphere</option><option value="pipe">Hollow cylinder</option><option value="vase">Wavy hollow vase</option><option value="two">Two separate objects</option><option value="torus">Torus</option><option value="box">Rectangular block</option><option value="poly">Six-inequality polyhedron</option></select>
 <h2>Objects <span id="objectCount" class="chip">1</span></h2><p>Each object contains mathematical regions. All inequalities within a region must be true. Add, subtract, or intersect regions within that object.</p>
@@ -554,11 +573,12 @@ async function reconnectFile(){const item=currentItem();if(!item)return;
  }catch(e){if(e.name!=='AbortError')fileMessage(item.id,'Reconnect failed: '+e.message,'error')}
 }
 function validProjectData(data){return data&&((Array.isArray(data.objects)&&data.objects.length)||typeof data.equations==='string')}
-// Use the standard system file picker for opening. This is compatible with
-// locally saved .ineqstudio files even if Chrome's File System Access picker
-// restricts files by their registered MIME type. Reconnect separately for
-// automatic in-place file writing.
-function openLocalFile(){const input=$('localFileInput');input.value='';input.click()}
+// A stable drag-and-drop project opener is primary on macOS; system file
+// chooser behavior is browser/OS-owned and cannot be forced by application JS.
+function openLocalFile(){const dialog=$('openProjectModal');$('modalOpenStatus').textContent='';$('localFileInput').value='';if(!dialog.open)dialog.showModal()}
+$('openProjectDialog').addEventListener('click',openLocalFile);
+$('closeProjectModal').addEventListener('click',()=>$('openProjectModal').close());
+$('openProjectModal').addEventListener('click',e=>{if(e.target===$('openProjectModal'))$('openProjectModal').close()});
 async function importChosenFile(file){
  if(!file)return;
  const destination=$('fileStatus');
@@ -569,16 +589,18 @@ async function importChosenFile(file){
   if(!validProjectData(data))throw Error('No Studio equations or objects were found in this file.');
   const base=String(data.projectName||file.name.replace(/\.(ineqstudio|json)$/i,'')||'Imported project').trim().slice(0,90)||'Imported project';
   const item=createProject(base,data);libraryRefresh();
+  if($('openProjectModal').open)$('openProjectModal').close();
   fileMessage(item.id,'✓ Opened '+file.name+'. The project is now in My Projects. Click Save to file to connect direct autosaving.','warning');
   say('Opened project: '+item.name);
- }catch(err){const message='Cannot open '+file.name+': '+err.message;destination.textContent=message;destination.className='file-status error';say(message,true)}
+ }catch(err){const message='Cannot open '+file.name+': '+err.message;destination.textContent=message;destination.className='file-status error';$('modalOpenStatus').textContent=message;say(message,true)}
 }
 $('localFileInput').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file){$('fileStatus').textContent='No file selected. You can also drag a project file into the box below.';return;}await importChosenFile(file);});
-const dropProject=$('dropProject');
-for(const eventName of ['dragenter','dragover'])dropProject.addEventListener(eventName,e=>{e.preventDefault();dropProject.style.background='#244565';});
-for(const eventName of ['dragleave','drop'])dropProject.addEventListener(eventName,e=>{e.preventDefault();dropProject.style.background='';});
-dropProject.addEventListener('drop',e=>{const file=e.dataTransfer?.files?.[0];if(file)importChosenFile(file)});
-dropProject.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openLocalFile()}});
+for(const zone of [$('dropProject'),$('modalDropProject')]){
+ for(const type of ['dragenter','dragover'])zone.addEventListener(type,e=>{e.preventDefault();e.stopPropagation();zone.classList.add('dragging')});
+ for(const type of ['dragleave','drop'])zone.addEventListener(type,e=>{e.preventDefault();e.stopPropagation();zone.classList.remove('dragging')});
+ zone.addEventListener('drop',e=>{const file=e.dataTransfer?.files?.[0];if(file)importChosenFile(file)});
+ zone.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openLocalFile()}});
+}
 async function restoreHandles(){if(!supportsFileAccess){refreshFileMessage();return}
  try{for(const item of library.items){const handle=await handleStore('get',item.id);if(handle){handleCache.set(item.id,handle);if(await canWrite(handle))fileState.set(item.id,{message:'✓ Connected to project file: '+handle.name,kind:'success'});else fileState.set(item.id,{message:'Saved in browser; reconnect file permission to resume autosaving: '+handle.name,kind:'warning'})}}}catch(e){console.warn('Stored file handles unavailable',e)}
  refreshFileMessage()}
@@ -604,6 +626,6 @@ $('addObject').onclick=()=>{const created={name:'Object '+(project.objects.lengt
 $('showParts').onclick=()=>{project.mode='parts';refresh();save();render()};$('showFinal').onclick=()=>{project.mode='final';refresh();save();render()};
 $('resolution').addEventListener('input',()=>{$('resolutionLabel').textContent=$('resolution').value+'³'});$('resolution').addEventListener('change',()=>{save();render()});$('fitBounds').onclick=fitCamera;$('defaultBounds').onclick=()=>{for(const a of ['x','y','z']){$(a+'min').value=(a==='z'?-2:-6);$(a+'max').value=(a==='z'?8:6)}save();render();fitCamera()};for(const a of ['x','y','z'])for(const side of ['min','max'])$(a+side).addEventListener('change',()=>{save();render()});
 $('download').onclick=()=>{save();const item=currentItem();const blob=new Blob([JSON.stringify({...projectData(),projectName:item?.name||'Project'},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=(item?.name||'inequality-studio-project').replace(/[^a-z0-9-_ ]/gi,'').trim().replace(/\s+/g,'-')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),3000)};
-$('open').onclick=()=>$('file').click();$('file').onchange=async e=>{try{const file=e.target.files[0];if(file){const data=JSON.parse(await file.text());if(!((Array.isArray(data.objects)&&data.objects.length)||typeof data.equations==='string'))throw Error('Not a supported project file');const name=projectName(data.projectName||file.name.replace(/\.(ineqstudio|json)$/i,''));if(name!==null)createProject(name,data)}}catch(err){say('Cannot import project: '+err.message,true)}e.target.value=''};
+
 initLibrary();$('showGrid').checked=project.showGrid;setWindowExpanded(project.windowExpanded);$('resolutionLabel').textContent=$('resolution').value+'³';refresh();init();setupChallenges();render();
 </script></body></html>
