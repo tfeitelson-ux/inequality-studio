@@ -44,7 +44,7 @@
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 </head>
 <body>
-<header><div><h1>◈ 3D Inequality Modeling Studio <span class="chip">Prototype 4.12.2</span></h1><small>Build 3D solids with mathematics, not CAD commands</small></div><small id="saveState">Project autosaved locally</small></header>
+<header><div><h1>◈ 3D Inequality Modeling Studio <span class="chip">Prototype 4.12.3</span></h1><small>Build 3D solids with mathematics, not CAD commands</small></div><small id="saveState">Project autosaved locally</small></header>
 <div class="app">
 <aside class="panel">
 <div class="challenge-box"><label for="studioMode">Studio mode</label><select id="studioMode"><option value="free">Free Build</option><option value="challenge">Challenges</option></select><div id="challengePicker" style="display:none"><label for="challengeSelect" style="margin-top:9px">Choose a challenge</label><select id="challengeSelect"></select><p style="margin-bottom:0">The target is a separate rotatable 3D object; dimensions don't need to match exactly.</p></div></div>
@@ -553,15 +553,29 @@ function validProjectData(data){return data&&((Array.isArray(data.objects)&&data
 // automatic in-place file writing.
 function openLocalFile(){const input=$('localFileInput');input.value='';input.click()}
 $('localFileInput').addEventListener('change',async e=>{
- const file=e.target.files?.[0];if(!file)return;
+ const file=e.target.files?.[0];
+ if(!file)return;
+ const destination=$('fileStatus');
+ destination.textContent='Opening '+file.name+'…';
+ destination.className='file-status saving';
  try{
-  const data=JSON.parse(await file.text());
-  if(!validProjectData(data))throw Error('This file does not contain a supported Studio design.');
-  const name=projectName(data.projectName||file.name.replace(/\.(ineqstudio|json)$/i,''));
-  if(name===null)return;
-  const item=createProject(name,data);
-  fileMessage(item.id,'Opened '+file.name+' and saved a recovery copy in this browser. Click Save to file to connect automatic saving to a project file.','warning');
- }catch(err){say('Cannot open project file: '+err.message,true)}finally{e.target.value=''}
+  const raw=await file.text();
+  let data;
+  try{data=JSON.parse(raw)}catch{throw Error('The selected file is not valid JSON. Check that it is a Studio project file.');}
+  if(!validProjectData(data))throw Error('This file does not contain a supported Studio design (objects or equations missing).');
+  // Do not use prompt() during a file input change. Browsers may suppress that
+  // dialog after asynchronous file reading, making a valid file appear not to open.
+  const base=String(data.projectName||file.name.replace(/\.(ineqstudio|json)$/i,'')||'Imported project').trim().slice(0,90)||'Imported project';
+  const item=createProject(base,data);
+  libraryRefresh();
+  fileMessage(item.id,'✓ Opened '+file.name+' as project "'+item.name+'". Saved in browser; use Save to file to enable direct autosaving.','warning');
+  say('Opened project: '+item.name);
+ }catch(err){
+  const message='Cannot open '+file.name+': '+err.message;
+  destination.textContent=message;
+  destination.className='file-status error';
+  say(message,true);
+ }finally{e.target.value=''}
 });
 async function restoreHandles(){if(!supportsFileAccess){refreshFileMessage();return}
  try{for(const item of library.items){const handle=await handleStore('get',item.id);if(handle){handleCache.set(item.id,handle);if(await canWrite(handle))fileState.set(item.id,{message:'✓ Connected to project file: '+handle.name,kind:'success'});else fileState.set(item.id,{message:'Saved in browser; reconnect file permission to resume autosaving: '+handle.name,kind:'warning'})}}}catch(e){console.warn('Stored file handles unavailable',e)}
