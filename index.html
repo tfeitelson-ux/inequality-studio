@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Inequality Modeling Studio — Version 5.1</title>
+<title>3D Inequality Modeling Studio — Version 5.3</title>
 <style>
 :root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#e8edf5;background:#0b1220}*{box-sizing:border-box}body{margin:0}header{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid #26364d;background:#111c2d;gap:12px;flex-wrap:wrap}h1{font-size:19px;margin:0}header small{color:#9eb3d0}.app{display:grid;grid-template-columns:minmax(300px,370px) 1fr;height:calc(100vh - 72px);min-height:570px}.panel{padding:22px;overflow:auto;border-right:1px solid #26364d;background:#111b2b}h2{font-size:13px;color:#a9bfdc;text-transform:uppercase;letter-spacing:.11em;margin:22px 0 10px}h2:first-child{margin-top:0}p{color:#a9bdd7;line-height:1.5;font-size:13px}label{display:block;font-size:13px;font-weight:650;margin-bottom:8px}textarea,select,input[type=text]{background:#0a1424;color:#f4f8ff;border:1px solid #3d5675;border-radius:9px;width:100%;padding:12px;font:15px ui-monospace,SFMono-Regular,Consolas,monospace}textarea{min-height:178px;resize:vertical;line-height:1.8}select{font:14px system-ui}.hint{font-size:12px;color:#8fa6c2;margin-top:9px}button{border:1px solid #446080;background:#243b58;color:#fff;padding:9px 12px;border-radius:8px;cursor:pointer;font-weight:600}button:hover{background:#345374}.primary{background:#3275bd;border-color:#4f9cfa}.primary:hover{background:#4085d4}.buttonrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}.sliderrow{display:flex;justify-content:space-between;align-items:center}input[type=range]{width:100%;accent-color:#6aabfd}.status{padding:12px;margin-top:18px;border-radius:8px;background:#1d3049;color:#c4e0ff;font-size:13px;min-height:42px}.status.error{background:#442636;color:#ffbdc4}.viewer{position:relative;min-height:440px;background:radial-gradient(ellipse at 45% 35%,#1c3048,#0c1422 72%)}#canvas{width:100%;height:100%;display:block;touch-action:none}.overlay{position:absolute;left:20px;top:18px;background:#101e31d9;color:#c5d6ec;font-size:12px;padding:10px 13px;border-radius:9px;pointer-events:none}.viewerfooter{position:absolute;bottom:17px;left:20px;right:20px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#b7c9e0;font-size:12px;pointer-events:none}.viewerfooter span{background:#101e31cb;padding:8px 11px;border-radius:7px}.chip{color:#a8cdfc;background:#213c5c;padding:3px 7px;border-radius:6px;font-size:11px}.boundsgrid{display:grid;grid-template-columns:40px 1fr 1fr;gap:7px;align-items:center}.boundsgrid input{min-width:0;width:100%;background:#0a1424;color:#f4f8ff;border:1px solid #3d5675;border-radius:7px;padding:8px;font:13px ui-monospace,monospace}.boundsgrid .axis{font-weight:700;color:#a8cdfc}.boundsgrid .colhead{font-size:11px;color:#9eb3d0}.off{opacity:.45}#file{display:none}@media(max-width:750px){.app{display:flex;flex-direction:column;height:auto}.panel{border-right:0;border-bottom:1px solid #26364d}.viewer{height:65vh;min-height:470px}header{padding:12px 16px}}
 
@@ -127,7 +127,7 @@ header .brand{min-width:230px}header .brand h1{font-size:16px}header .brand smal
 
 .export-feedback{margin-top:10px;padding:11px;border-radius:8px;border:1px solid #8aaf92;background:#203d30;color:#ddf8e5;font-weight:600;font-size:12px;line-height:1.5}
 .export-feedback.error{border-color:#e38989;background:#542733;color:#ffe3e6}
-/* Version 5.1: larger legible equation editor, aligned overlay and caret */
+/* Version 5.3: larger legible equation editor, aligned overlay and caret */
 .code-editor .code-mirror,.code-editor textarea{font-size:16px!important;line-height:1.8!important;letter-spacing:0!important}
 .code-editor .code-mirror{min-height:110px}
 .region-card textarea{min-height:115px}
@@ -140,13 +140,37 @@ header .brand{min-width:230px}header .brand h1{font-size:16px}header .brand smal
 .view-orientation{width:40px;height:27px;display:block;flex:none}
 .axis-legend{font-weight:750}
 @media(max-width:650px){.camera-views{right:7px;top:84px;gap:2px}.camera-views button{min-width:39px;padding:3px}.view-orientation{width:33px}}
+
+/* 5.2: compact camera presets and mathematical-window controls in the viewport. */
+.camera-toolbar{position:absolute;top:58px;right:18px;z-index:6;display:flex;flex-direction:column;align-items:stretch;gap:5px;width:max-content;max-width:calc(100% - 30px);padding:6px;border:1px solid #456784;border-radius:11px;background:#101e31ed;box-shadow:0 4px 16px #030a1480}
+.camera-toolbar .camera-views{position:static!important;top:auto!important;right:auto!important;display:flex;flex-wrap:nowrap;justify-content:center;max-width:100%;gap:4px;padding:0;border:0;background:transparent}
+.camera-toolbar .camera-views button{min-width:43px;min-height:44px;padding:3px 4px;gap:0;font-size:11px}
+.camera-toolbar .view-orientation{width:33px;height:23px}
+.camera-window-controls{display:flex;align-items:center;justify-content:center;gap:5px;padding-top:5px;border-top:1px solid #345270}
+.camera-window-controls button{flex:0 0 auto;font-size:12px;padding:6px 8px}
+.camera-window-controls .icon-window-zoom{padding:5px 7px;display:flex;align-items:center;justify-content:center;min-width:37px;min-height:35px}
+.camera-window-controls .icon-window-zoom svg{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:2}
+.camera-window-controls .zoom-factor-label{display:flex;flex:0 1 auto;align-items:center;gap:4px;margin:0;font-size:10px;color:#bcd3ed;white-space:nowrap}
+.camera-window-controls .zoom-factor-label select{width:auto;min-width:65px;margin:0;padding:6px 4px;font-size:12px;border-radius:7px}
+.camera-window-controls .reset-window{white-space:nowrap}
+@media(max-width:700px){.camera-toolbar{right:7px;top:84px;max-width:calc(100% - 14px)}.camera-window-controls .zoom-factor-label span{display:none}.camera-toolbar .camera-views button{min-width:35px}}
+@media(max-width:410px){.camera-toolbar{top:104px}.camera-window-controls{gap:3px}.camera-window-controls button{padding:5px}.camera-window-controls .reset-window{font-size:11px}.camera-toolbar .camera-views button{min-width:32px}}
+
+/* Studio 5.3: adjustable equation panel with an accessible drag handle. */
+.app{grid-template-columns:minmax(290px,var(--studio-left-width,370px)) 12px minmax(0,1fr)}
+.panel{min-width:0;border-right:0}
+.panel-divider{position:relative;background:#23394f;border-left:1px solid #41617e;border-right:1px solid #41617e;cursor:col-resize;touch-action:none;user-select:none;display:flex;align-items:center;justify-content:center;z-index:7}
+.panel-divider:hover,.panel-divider:focus-visible,.panel-divider.dragging{background:#3a6893;outline:0}
+.divider-grip{font-size:30px;font-weight:bold;line-height:1;color:#bfd9ef;pointer-events:none}
+.workspace{min-width:0}
+@media(max-width:760px){.app{display:flex;flex-direction:column}.panel-divider{display:none}.panel{border-bottom:1px solid #26364d}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/mathjs@13.2.0/lib/browser/math.js"></script>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 </head>
 <body>
 <header>
- <div class="brand"><h1>◈ 3D Inequality Modeling Studio <span class="chip">Student Release 5.1</span></h1><small>Build 3D solids with mathematics, not CAD commands</small></div>
+ <div class="brand"><h1>◈ 3D Inequality Modeling Studio <span class="chip">Student Release 5.2</span></h1><small>Build 3D solids with mathematics, not CAD commands</small></div>
  <div class="toolbar-project"><span class="toolbar-caption">CURRENT PROJECT</span><strong id="toolbarProjectName">Loading…</strong><small id="saveState">Checking save status…</small></div><button type="button" id="gettingStartedBtn" class="toolbar-library-btn" title="Getting started">? Help</button><button id="toolbarNewProject" type="button" class="primary toolbar-library-btn" title="Create a new project">+ New Project</button>
  <div class="toolbar-mode"><label for="studioMode">Studio mode</label><span id="toolbarModeSlot"></span>
 <label class="toolbar-resolution" title="Rebuild your 3D preview at higher resolution. Printing detail is separate."><input type="checkbox" id="highResolution"> High Resolution (Slower)</label></div>
@@ -195,13 +219,19 @@ header .brand{min-width:230px}header .brand h1{font-size:16px}header .brand smal
 <section id="windowPanel" class="window-panel collapsed">
 <button id="windowToggle" class="window-header" type="button" aria-expanded="false" aria-controls="windowDetails"><strong>▸ Viewing Window</strong><span id="windowSummary" class="window-summary">x: −10…10 · y: −10…10 · z: −10…10</span></button>
 <div id="windowDetails" class="window-details"><div class="boundsgrid"><span></span><span class="colhead">Minimum</span><span class="colhead">Maximum</span><span class="axis">x</span><input id="xmin" type="number" value="-10" step="0.5"><input id="xmax" type="number" value="10" step="0.5"><span class="axis">y</span><input id="ymin" type="number" value="-10" step="0.5"><input id="ymax" type="number" value="10" step="0.5"><span class="axis">z</span><input id="zmin" type="number" value="-10" step="0.5"><input id="zmax" type="number" value="10" step="0.5"></div>
-<div class="window-zoom-row"><button type="button" id="windowZoomIn" title="Reduce all three coordinate ranges around their centers">− Window In</button><button type="button" id="windowZoomOut" title="Expand all three coordinate ranges around their centers">+ Window Out</button><label for="windowZoomFactor">Factor <select id="windowZoomFactor" aria-label="Window zoom factor"><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2" selected>2×</option><option value="3">3×</option><option value="5">5×</option><option value="10">10×</option></select></label></div>
-<div class="buttonrow"><button id="defaultBounds">Reset to Standard (−10 to 10)</button><button id="fitBounds">Fit camera</button></div><div class="hint">The grid lies at z = 0. For exploration, unbounded regions are clipped to the viewing window. STL export still requires a truly bounded solid.</div></div></section>
+
+<div class="buttonrow"><button id="fitBounds">Fit camera</button></div><div class="hint">The grid lies at z = 0. For exploration, unbounded regions are clipped to the viewing window. STL export still requires a truly bounded solid.</div></div></section>
 <section class="print-settings"><label>3D printing · improved STL</label><div class="choice"><span class="tiny">Detail</span><select id="exportN"><option value="50">Draft</option><option value="80" selected>Standard</option><option value="120">Fine</option><option value="180">Very fine (slow)</option></select><span class="tiny">Longest side (mm)</span><input id="exportMM" type="number" value="80" min="10" max="250" step="5"><label class="inlinecheck" title="Use a denser STL mesh for smoother curved surfaces"><input id="exportHighRes" type="checkbox"> High resolution (slower)</label></div><div class="buttonrow"><button id="exportSTL" class="primary">Export STL</button></div><div id="exportFeedback" class="export-feedback" role="status" aria-live="assertive" hidden></div><div class="print-notice">Exact flat faces for one convex linear object. Other objects use interpolated smooth-surface meshing rather than blocky cubes. If the object extends outside the viewing window, STL export will stop with an error instead of exporting a clipped model.</div></section>
 
 <div id="status" role="status" class="status">Loading 3D engine…</div>
 </aside>
-<div class="workspace"><main class="viewer"><canvas id="canvas" aria-label="Interactive three dimensional visualization"></canvas><div class="overlay">Drag to rotate · Scroll to zoom · Right-drag to pan</div><div class="modebar"><button id="showParts" class="chosen">Individual objects</button><button id="showFinal">Combined preview</button><label class="grid-toggle" title="Show or hide the grid plane, keeping colored axes and numbered ticks"><input id="showGrid" type="checkbox" checked> Show grid</label></div><div class="camera-views" aria-label="Camera orientation presets; drag freely after choosing a preset"><button type="button" id="view3d" class="chosen" title="Standard perspective, freely rotate"><svg class="view-orientation" viewBox="0 0 44 28" aria-hidden="true"><path d="M20 24 L38 18 M20 24 L5 14 M20 24 L20 2" fill="none" stroke="#9eb8df" stroke-width="2"/><text x="38" y="16" font-size="10" fill="#ff9a9a">x</text><text x="1" y="11" font-size="10" fill="#9ee8b3">y</text><text x="23" y="9" font-size="10" fill="#a3c9ff">z</text></svg><span>3D</span></button><button type="button" id="viewxy" title="x horizontal, y up, z perpendicular; drag to rotate"><svg class="view-orientation" viewBox="0 0 44 28" aria-hidden="true"><path d="M6 22 H38 M17 26 V3" fill="none" stroke="#bfd4ea" stroke-width="1.6"/><path d="M34 19 L39 22 L34 25 M14 7 L17 2 L20 7" fill="none" stroke="#bfd4ea" stroke-width="1.4"/><circle cx="17" cy="18" r="3" fill="none" stroke="#f1ad61"/><circle cx="17" cy="18" r="1" fill="#f1ad61"/><text x="36" y="14" font-size="10" fill="#f5f8ff">x</text><text x="23" y="8" font-size="10" fill="#f5f8ff">y</text><text x="24" y="26" font-size="8" fill="#f1ad61">z</text></svg><span>XY</span></button><button type="button" id="viewxz" title="x horizontal, z up, y perpendicular; drag to rotate"><svg class="view-orientation" viewBox="0 0 44 28" aria-hidden="true"><path d="M6 22 H38 M17 26 V3" fill="none" stroke="#bfd4ea" stroke-width="1.6"/><path d="M34 19 L39 22 L34 25 M14 7 L17 2 L20 7" fill="none" stroke="#bfd4ea" stroke-width="1.4"/><circle cx="17" cy="18" r="3" fill="none" stroke="#f1ad61"/><circle cx="17" cy="18" r="1" fill="#f1ad61"/><text x="36" y="14" font-size="10" fill="#f5f8ff">x</text><text x="23" y="8" font-size="10" fill="#f5f8ff">z</text><text x="24" y="26" font-size="8" fill="#f1ad61">y</text></svg><span>XZ</span></button><button type="button" id="viewyz" title="y horizontal, z up, x perpendicular; drag to rotate"><svg class="view-orientation" viewBox="0 0 44 28" aria-hidden="true"><path d="M6 22 H38 M17 26 V3" fill="none" stroke="#bfd4ea" stroke-width="1.6"/><path d="M34 19 L39 22 L34 25 M14 7 L17 2 L20 7" fill="none" stroke="#bfd4ea" stroke-width="1.4"/><circle cx="17" cy="18" r="3" fill="none" stroke="#f1ad61"/><circle cx="17" cy="18" r="1" fill="#f1ad61"/><text x="36" y="14" font-size="10" fill="#f5f8ff">y</text><text x="23" y="8" font-size="10" fill="#f5f8ff">z</text><text x="24" y="26" font-size="8" fill="#f1ad61">x</text></svg><span>YZ</span></button><button type="button" id="viewzy" title="z horizontal, y up, x perpendicular; drag to rotate"><svg class="view-orientation" viewBox="0 0 44 28" aria-hidden="true"><path d="M6 22 H38 M17 26 V3" fill="none" stroke="#bfd4ea" stroke-width="1.6"/><path d="M34 19 L39 22 L34 25 M14 7 L17 2 L20 7" fill="none" stroke="#bfd4ea" stroke-width="1.4"/><circle cx="17" cy="18" r="3" fill="none" stroke="#f1ad61"/><circle cx="17" cy="18" r="1" fill="#f1ad61"/><text x="36" y="14" font-size="10" fill="#f5f8ff">z</text><text x="23" y="8" font-size="10" fill="#f5f8ff">y</text><text x="24" y="26" font-size="8" fill="#f1ad61">x</text></svg><span>ZY</span></button></div><div id="deleteToast" class="delete-toast" role="status"><span id="deleteText">Object deleted.</span><button type="button" id="undoDelete">↶ Undo</button></div><div class="axis-legend"><span><i style="background:#ef6666"></i>X</span><span><i style="background:#70d68e"></i>Y</span><span><i style="background:#67a8fb"></i>Z</span></div><div class="viewerfooter"><span id="meshInfo">Initializing mesh…</span></div></main><section class="challenge-panel" id="challengePanel"><div class="challenge-top"><h3 id="challengeTitle">Challenge target</h3><div class="challenge-picker-inline"><label for="challengeSelect">Choose Challenge</label><select id="challengeSelect" aria-label="Choose Challenge"></select></div></div><span class="tag">Drag to rotate • Scroll to zoom</span><canvas id="targetCanvas" aria-label="Rotatable challenge target"></canvas><p id="challengePrompt"></p><div class="challenge-actions"><button id="matchViews">Match views</button><button id="challengeHint">Show hint</button><button id="completeChallenge">I've got it!</button></div><p id="hintText" style="display:none"></p><p id="challengeProgress" class="tag"></p></section></div>
+<div id="panelDivider" class="panel-divider" role="separator" tabindex="0" aria-label="Resize equation panel" aria-orientation="vertical" aria-valuemin="290" aria-valuemax="900" title="Drag to resize the equation panel; double-click to restore default"><span class="divider-grip" aria-hidden="true">⋮</span></div>
+<div class="workspace"><main class="viewer"><canvas id="canvas" aria-label="Interactive three dimensional visualization"></canvas><div class="overlay">Drag to rotate · Scroll wheel = camera zoom · Magnifiers = window zoom · Right-drag to pan</div><div class="modebar"><button id="showParts" class="chosen">Individual objects</button><button id="showFinal">Combined preview</button><label class="grid-toggle" title="Show or hide the grid plane, keeping colored axes and numbered ticks"><input id="showGrid" type="checkbox" checked> Show grid</label></div><div class="camera-toolbar" role="group" aria-label="Camera orientation and modeling-window controls"><div class="camera-views" aria-label="Camera orientation presets; drag freely after choosing a preset"><button type="button" id="view3d" class="chosen" title="Standard 3D angle, freely rotate (orthographic camera)"><svg class="view-orientation" viewBox="0 0 44 28" aria-hidden="true"><path d="M20 24 L38 18 M20 24 L5 14 M20 24 L20 2" fill="none" stroke="#9eb8df" stroke-width="2"/><text x="38" y="16" font-size="10" fill="#ff9a9a">x</text><text x="1" y="11" font-size="10" fill="#9ee8b3">y</text><text x="23" y="9" font-size="10" fill="#a3c9ff">z</text></svg><span>3D</span></button><button type="button" id="viewxy" title="x horizontal, y up, z perpendicular; drag to rotate"><svg class="view-orientation" viewBox="0 0 44 28" aria-hidden="true"><path d="M6 22 H38 M17 26 V3" fill="none" stroke="#bfd4ea" stroke-width="1.6"/><path d="M34 19 L39 22 L34 25 M14 7 L17 2 L20 7" fill="none" stroke="#bfd4ea" stroke-width="1.4"/><circle cx="17" cy="18" r="3" fill="none" stroke="#f1ad61"/><circle cx="17" cy="18" r="1" fill="#f1ad61"/><text x="36" y="14" font-size="10" fill="#f5f8ff">x</text><text x="23" y="8" font-size="10" fill="#f5f8ff">y</text><text x="24" y="26" font-size="8" fill="#f1ad61">z</text></svg><span>XY</span></button><button type="button" id="viewxz" title="x horizontal, z up, y perpendicular; drag to rotate"><svg class="view-orientation" viewBox="0 0 44 28" aria-hidden="true"><path d="M6 22 H38 M17 26 V3" fill="none" stroke="#bfd4ea" stroke-width="1.6"/><path d="M34 19 L39 22 L34 25 M14 7 L17 2 L20 7" fill="none" stroke="#bfd4ea" stroke-width="1.4"/><circle cx="17" cy="18" r="3" fill="none" stroke="#f1ad61"/><circle cx="17" cy="18" r="1" fill="#f1ad61"/><text x="36" y="14" font-size="10" fill="#f5f8ff">x</text><text x="23" y="8" font-size="10" fill="#f5f8ff">z</text><text x="24" y="26" font-size="8" fill="#f1ad61">y</text></svg><span>XZ</span></button><button type="button" id="viewyz" title="y horizontal, z up, x perpendicular; drag to rotate"><svg class="view-orientation" viewBox="0 0 44 28" aria-hidden="true"><path d="M6 22 H38 M17 26 V3" fill="none" stroke="#bfd4ea" stroke-width="1.6"/><path d="M34 19 L39 22 L34 25 M14 7 L17 2 L20 7" fill="none" stroke="#bfd4ea" stroke-width="1.4"/><circle cx="17" cy="18" r="3" fill="none" stroke="#f1ad61"/><circle cx="17" cy="18" r="1" fill="#f1ad61"/><text x="36" y="14" font-size="10" fill="#f5f8ff">y</text><text x="23" y="8" font-size="10" fill="#f5f8ff">z</text><text x="24" y="26" font-size="8" fill="#f1ad61">x</text></svg><span>YZ</span></button><button type="button" id="viewzy" title="z horizontal, y up, x perpendicular; drag to rotate"><svg class="view-orientation" viewBox="0 0 44 28" aria-hidden="true"><path d="M6 22 H38 M17 26 V3" fill="none" stroke="#bfd4ea" stroke-width="1.6"/><path d="M34 19 L39 22 L34 25 M14 7 L17 2 L20 7" fill="none" stroke="#bfd4ea" stroke-width="1.4"/><circle cx="17" cy="18" r="3" fill="none" stroke="#f1ad61"/><circle cx="17" cy="18" r="1" fill="#f1ad61"/><text x="36" y="14" font-size="10" fill="#f5f8ff">z</text><text x="23" y="8" font-size="10" fill="#f5f8ff">y</text><text x="24" y="26" font-size="8" fill="#f1ad61">x</text></svg><span>ZY</span></button></div><div class="camera-window-controls" aria-label="Coordinate window zoom">
+<button type="button" id="windowZoomIn" class="icon-window-zoom" aria-label="Window Zoom In" title="Window Zoom In: shrink the mathematical coordinate window"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5M7 10.5h7M10.5 7v7"/></svg></button>
+<button type="button" id="windowZoomOut" class="icon-window-zoom" aria-label="Window Zoom Out" title="Window Zoom Out: expand the mathematical coordinate window"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5M7 10.5h7"/></svg></button>
+<label for="windowZoomFactor" class="zoom-factor-label"><span>Window</span><select id="windowZoomFactor" aria-label="Coordinate window zoom factor"><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2" selected>2×</option><option value="3">3×</option><option value="5">5×</option><option value="10">10×</option></select></label>
+<button type="button" id="defaultBounds" class="reset-window" title="Reset x, y, and z to −10…10 and reset factor to 2×">↺ Reset</button>
+</div></div><div id="deleteToast" class="delete-toast" role="status"><span id="deleteText">Object deleted.</span><button type="button" id="undoDelete">↶ Undo</button></div><div class="axis-legend"><span><i style="background:#ef6666"></i>X</span><span><i style="background:#70d68e"></i>Y</span><span><i style="background:#67a8fb"></i>Z</span></div><div class="viewerfooter"><span id="meshInfo">Initializing mesh…</span></div></main><section class="challenge-panel" id="challengePanel"><div class="challenge-top"><h3 id="challengeTitle">Challenge target</h3><div class="challenge-picker-inline"><label for="challengeSelect">Choose Challenge</label><select id="challengeSelect" aria-label="Choose Challenge"></select></div></div><span class="tag">Drag to rotate • Scroll to zoom</span><canvas id="targetCanvas" aria-label="Rotatable challenge target"></canvas><p id="challengePrompt"></p><div class="challenge-actions"><button id="matchViews">Match views</button><button id="challengeHint">Show hint</button><button id="completeChallenge">I've got it!</button></div><p id="hintText" style="display:none"></p><p id="challengeProgress" class="tag"></p></section></div>
 </div>
 <dialog id="gettingStartedDialog" class="open-project-modal" aria-labelledby="helpTitle"><div class="modal-head"><strong id="helpTitle">Getting started</strong><button type="button" id="closeHelp">✕</button></div>
 <p><strong>1.</strong> Create a project, then enter one inequality per line, such as <code>-2 &lt; x &lt; 2</code>, <code>-2 &lt; y &lt; 2</code>, and <code>0 &lt; z &lt; 3</code>.</p>
@@ -213,6 +243,37 @@ header .brand{min-width:230px}header .brand h1{font-size:16px}header .brand smal
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 const $=id=>document.getElementById(id);
+// Adjustable equation sidebar width, independent of saved modeling projects.
+function setupPanelDivider(){
+ const divider=$('panelDivider'),app=document.querySelector('.app');if(!divider||!app)return;
+ const key='inequality-studio-left-panel-width-v5-3',defaultWidth=370;
+ const mobile=()=>window.matchMedia('(max-width:760px)').matches;
+ const limit=()=>Math.max(290,Math.min(900,app.getBoundingClientRect().width-320));
+ const apply=width=>{const value=Math.max(290,Math.min(limit(),Math.round(width)));app.style.setProperty('--studio-left-width',value+'px');divider.setAttribute('aria-valuenow',String(value));return value};
+ let saved=defaultWidth;try{saved=Number(localStorage.getItem(key))||defaultWidth}catch(e){}
+ apply(saved);
+ let dragging=false;
+ divider.addEventListener('pointerdown',event=>{
+  if(mobile()||event.button!==0)return;
+  dragging=true;divider.classList.add('dragging');divider.setPointerCapture(event.pointerId);event.preventDefault();
+ });
+ divider.addEventListener('pointermove',event=>{
+  if(!dragging||mobile())return;
+  const rect=app.getBoundingClientRect();apply(event.clientX-rect.left);event.preventDefault();
+ });
+ const end=()=>{if(!dragging)return;dragging=false;divider.classList.remove('dragging');try{localStorage.setItem(key,String(parseInt(getComputedStyle(app).getPropertyValue('--studio-left-width'))))}catch(e){}};
+ divider.addEventListener('pointerup',end);divider.addEventListener('pointercancel',end);
+ divider.addEventListener('dblclick',()=>{apply(defaultWidth);try{localStorage.setItem(key,String(defaultWidth))}catch(e){}});
+ divider.addEventListener('keydown',event=>{
+  if(!['ArrowLeft','ArrowRight','Home'].includes(event.key))return;
+  event.preventDefault();const old=parseInt(getComputedStyle(app).getPropertyValue('--studio-left-width'))||defaultWidth;
+  const val=apply(event.key==='Home'?defaultWidth:old+(event.key==='ArrowLeft'?-25:25));
+  try{localStorage.setItem(key,String(val))}catch(e){}
+ });
+ window.addEventListener('resize',()=>{if(!mobile()){const value=parseInt(getComputedStyle(app).getPropertyValue('--studio-left-width'))||defaultWidth;apply(value)}});
+}
+setupPanelDivider();
+
 // Move the equation editor immediately below the always-visible project identity.
 // Other tools remain accessible in compact, independent disclosures.
 function prepareSidebar(){
@@ -259,12 +320,31 @@ const challenges=[{"id":"challenge-01","title":"1. The Slab","prompt":"Build a t
 const palette=['#78b8f2','#f6b56f','#8ed9ac','#d59ff1','#ee819b','#f3d879','#78d9d5'];
 let project={objects:structuredClone(starter.sphere),mode:'parts',showGrid:true,windowExpanded:false};
 const newRegion=(op='intersect')=>({name:'New region',op,eq:'',ignored:false});
-let scene,camera,perspectiveCamera,orthoCamera,renderer,controls,solids=[],grid,axes,axisLabels=[],renderTimer,version=0,targetScene,targetCamera,targetRenderer,targetControls,targetMeshes=[];const deletionStack=[];let cameraMode='3d',previous3D=null;let viewportWidth=1,viewportHeight=1;
+let scene,camera,renderer,controls,solids=[],grid,axes,axisLabels=[],renderTimer,version=0,targetScene,targetCamera,targetRenderer,targetControls,targetMeshes=[];const deletionStack=[];let cameraMode='3d',cameraTransition=null;let viewportWidth=1,viewportHeight=1;
 const expansion=new WeakMap();
 let expansionByPosition=[]; // UI-only, shared across project changes; never stored in project files
 const canvas=$('canvas'),status=$('status');
 function say(s,error=false){status.textContent=s;status.classList.toggle('error',error)}
-function init(){scene=new THREE.Scene();perspectiveCamera=new THREE.PerspectiveCamera(48,1,.1,100000);perspectiveCamera.position.set(14,11,15);orthoCamera=new THREE.OrthographicCamera(-10,10,10,-10,.01,100000);camera=perspectiveCamera;renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.target.set(0,0,0);controls.addEventListener('start',markCustomCameraView);scene.add(new THREE.HemisphereLight(0xe0f0ff,0x283f68,2.7));const light=new THREE.DirectionalLight(0xffffff,2.5);light.position.set(8,13,9);scene.add(light);grid=new THREE.GridHelper(12,12,0x54718e,0x34475f);scene.add(grid);axes=new THREE.Group();scene.add(axes);updateWindowGuides();const resize=()=>{let w=canvas.clientWidth||1,h=canvas.clientHeight||1;viewportWidth=w;viewportHeight=h;renderer.setSize(w,h,false);perspectiveCamera.aspect=w/h;perspectiveCamera.updateProjectionMatrix();updateOrthoFrustum()};new ResizeObserver(resize).observe(canvas);resize();function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}animate();initTargetViewer()}
+function init(){
+ scene=new THREE.Scene();
+ camera=new THREE.OrthographicCamera(-10,10,10,-10,0.001,100000);
+ camera.position.set(14,11,15);
+ renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+ renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;
+ controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;
+ controls.target.set(0,0,0);
+ controls.addEventListener('start',()=>{interruptCameraTransition();markCustomCameraView()});
+ canvas.addEventListener('pointerdown',()=>interruptCameraTransition(),true);
+ canvas.addEventListener('wheel',()=>interruptCameraTransition(),true);
+ scene.add(new THREE.HemisphereLight(0xe0f0ff,0x283f68,2.7));
+ const light=new THREE.DirectionalLight(0xffffff,2.5);light.position.set(8,13,9);scene.add(light);
+ grid=new THREE.GridHelper(12,12,0x54718e,0x34475f);scene.add(grid);
+ axes=new THREE.Group();scene.add(axes);updateWindowGuides();
+ const resize=()=>{const w=canvas.clientWidth||1,h=canvas.clientHeight||1;viewportWidth=w;viewportHeight=h;renderer.setSize(w,h,false);updateOrthoFrustum()};
+ new ResizeObserver(resize).observe(canvas);resize();
+ function animate(){requestAnimationFrame(animate);if(cameraTransition)advanceCameraTransition(performance.now());else controls.update();renderer.render(scene,camera)}
+ animate();initTargetViewer();
+}
 function initTargetViewer(){const c=$('targetCanvas');targetScene=new THREE.Scene();targetCamera=new THREE.PerspectiveCamera(48,1,.1,200);targetRenderer=new THREE.WebGLRenderer({canvas:c,antialias:true,alpha:true});targetRenderer.setPixelRatio(Math.min(devicePixelRatio,2));targetRenderer.outputColorSpace=THREE.SRGBColorSpace;targetScene.add(new THREE.HemisphereLight(0xeaf2ff,0x263c59,2.7));const l=new THREE.DirectionalLight(0xffffff,2.2);l.position.set(8,12,10);targetScene.add(l);targetControls=new OrbitControls(targetCamera,c);targetControls.enableDamping=true;const resize=()=>{let w=c.clientWidth||300,h=c.clientHeight||300;targetRenderer.setSize(w,h,false);targetCamera.aspect=w/h;targetCamera.updateProjectionMatrix()};new ResizeObserver(resize).observe(c);resize();const loop=()=>{requestAnimationFrame(loop);if($('studioMode').value!=='challenge')return;targetControls.update();targetRenderer.render(targetScene,targetCamera)};loop()}
 function normalize(s){return s.replace(/≤/g,'<=').replace(/≥/g,'>=').replace(/−/g,'-').replace(/\u2212/g,'-')}
 function parseConditions(text){if(!window.math)throw Error('Math library did not load. Check your internet connection.');let terms=[];for(const [lineIndex,raw] of normalize(text).split(/[\n;]/).entries()){let line=raw.trim();if(!line||line.startsWith('#'))continue;try{let parts=line.split(/(<=|>=|<|>)/).map(v=>v.trim()).filter(Boolean);if(parts.length!==3&&parts.length!==5)throw Error('Invalid inequality: '+line);for(let i=0;i<parts.length-2;i+=2){let a=parts[i],op=parts[i+1],b=parts[i+2];let compiled=math.compile(op[0]==='<'?`(${b})-(${a})`:`(${a})-(${b})`);terms.push({a,op,b,compiled})}}catch(e){throw Error('line '+(lineIndex+1)+' ('+line+'): '+e.message)}}if(!terms.length)throw Error('Enter at least one inequality.');return terms}
@@ -319,37 +399,78 @@ for(const ax of axisData){const [lo,hi]=b[ax.key];axes.add(lineGuide(ax.v(lo),ax
 }
 // 5.1: Preserve orbit direction on window adjustments; a preset is never a rotation lock.
 function boundsCenterSpan(){const b=getBounds();return {center:new THREE.Vector3((b.x[0]+b.x[1])/2,(b.z[0]+b.z[1])/2,-(b.y[0]+b.y[1])/2),span:Math.max(...['x','y','z'].map(a=>b[a][1]-b[a][0]))}}
-function updateOrthoFrustum(){if(!orthoCamera)return;const {span}=boundsCenterSpan();const w=viewportWidth||1,h=viewportHeight||1;const aspect=w/h;const size=span*1.55;orthoCamera.left=-size*Math.max(1,aspect)/2;orthoCamera.right=size*Math.max(1,aspect)/2;orthoCamera.top=size*Math.max(1,1/aspect)/2;orthoCamera.bottom=-size*Math.max(1,1/aspect)/2;orthoCamera.updateProjectionMatrix()}
-function fitCamera(){
- const {center,span}=boundsCenterSpan();const orientation=new THREE.Vector3().subVectors(camera.position,controls.target);
- if(orientation.lengthSq()<1e-8)orientation.set(1,1,1);orientation.normalize();
- const distance=span*2.45;controls.target.copy(center);camera.position.copy(center).addScaledVector(orientation,distance);
- perspectiveCamera.far=Math.max(2000,span*35);perspectiveCamera.near=Math.max(.001,span/10000);perspectiveCamera.updateProjectionMatrix();
- orthoCamera.far=Math.max(2000,span*35);orthoCamera.updateProjectionMatrix();updateOrthoFrustum();controls.update();
- // Do not restore pre-window-change camera coordinates when returning to perspective.
- previous3D=null;
+// One orthographic camera for every preset: no perspective/orthographic switch at the end.
+function updateOrthoFrustum(){
+ if(!camera)return;
+ const {span}=boundsCenterSpan(),w=viewportWidth||1,h=viewportHeight||1,aspect=w/h,size=span*1.55;
+ camera.left=-size*Math.max(1,aspect)/2;
+ camera.right=size*Math.max(1,aspect)/2;
+ camera.top=size*Math.max(1,1/aspect)/2;
+ camera.bottom=-size*Math.max(1,1/aspect)/2;
+ camera.updateProjectionMatrix();
 }
+function fitCamera(){
+ interruptCameraTransition();
+ const {center,span}=boundsCenterSpan();
+ const orientation=new THREE.Vector3().subVectors(camera.position,controls.target);
+ if(orientation.lengthSq()<1e-8)orientation.set(1,1,1);orientation.normalize();
+ controls.target.copy(center);camera.position.copy(center).addScaledVector(orientation,span*2.45);
+ camera.near=Math.max(.001,span/10000);camera.far=Math.max(2000,span*35);
+ // Fit camera is explicitly requested by a bounds change: reset any wheel zoom.
+ camera.zoom=1;updateOrthoFrustum();controls.update();
+}
+// Three.js axes are (x,z,-y). Each view specifies the outward direction and its screen-up vector.
 const presetDirections={
  xy:{direction:new THREE.Vector3(0,1,0),up:new THREE.Vector3(0,0,-1)},
  xz:{direction:new THREE.Vector3(0,0,1),up:new THREE.Vector3(0,1,0)},
  yz:{direction:new THREE.Vector3(1,0,0),up:new THREE.Vector3(0,1,0)},
  zy:{direction:new THREE.Vector3(-1,0,0),up:new THREE.Vector3(0,0,-1)}
 };
+const standard3D={direction:new THREE.Vector3(1.25,.95,1.3).normalize(),up:new THREE.Vector3(0,1,0)};
 function updateCameraButtonState(mode){for(const id of ['3d','xy','xz','yz','zy'])$('view'+id).classList.toggle('chosen',id===mode)}
-function setCameraView(mode){
- const {center,span}=boundsCenterSpan();const oldDirection=new THREE.Vector3().subVectors(camera.position,controls.target);
- if(mode==='3d'){
-  const direction=previous3D?.direction?.clone()||new THREE.Vector3(1.25,.95,1.3).normalize();
-  camera=perspectiveCamera;camera.up.set(0,1,0);camera.position.copy(center).addScaledVector(direction,span*2.45);camera.lookAt(center);
- }else{
-  if(camera===perspectiveCamera){const d=oldDirection.lengthSq()>1e-8?oldDirection.normalize():new THREE.Vector3(1,1,1).normalize();previous3D={direction:d.clone()}}
-  const preset=presetDirections[mode];if(!preset)return;
-  camera=orthoCamera;camera.up.copy(preset.up);camera.position.copy(center).addScaledVector(preset.direction,span*2.45);camera.lookAt(center);updateOrthoFrustum();
+function interruptCameraTransition(){
+ if(!cameraTransition)return;
+ cameraTransition=null;controls.enabled=true;controls.update();
+ cameraMode='custom';updateCameraButtonState('custom');
+}
+function advanceCameraTransition(now){
+ const t=cameraTransition;if(!t)return;
+ const progress=t.duration<=0?1:Math.min(1,Math.max(0,(now-t.startedAt)/t.duration));
+ // Smoothstep, with deliberately gradual onset/finish for classroom viewing.
+ const eased=progress*progress*(3-2*progress);
+ camera.position.lerpVectors(t.fromPosition,t.toPosition,eased);
+ camera.quaternion.copy(t.fromQuaternion).slerp(t.toQuaternion,eased);
+ camera.up.copy(t.fromUp).lerp(t.toUp,eased).normalize();
+ controls.target.copy(t.fromTarget).lerp(t.toTarget,eased);
+ if(progress>=1){
+  camera.position.copy(t.toPosition);camera.quaternion.copy(t.toQuaternion);camera.up.copy(t.toUp);
+  controls.target.copy(t.toTarget);cameraTransition=null;controls.enabled=true;controls.update();
+  cameraMode=t.mode;updateCameraButtonState(t.mode);
  }
- controls.object=camera;controls.enableRotate=true;controls.target.copy(center);controls.update();cameraMode=mode;updateCameraButtonState(mode);
+}
+function setCameraView(mode){
+ if(mode!=='3d'&&!presetDirections[mode])return;
+ // Interruptions begin from the current interpolated pose, not a prior camera position.
+ if(cameraTransition){advanceCameraTransition(performance.now());cameraTransition=null;controls.enabled=true}
+ const target=controls.target.clone();
+ const fromPosition=camera.position.clone(),fromQuaternion=camera.quaternion.clone(),fromUp=camera.up.clone();
+ const preset=mode==='3d'?standard3D:presetDirections[mode];
+ const distance=Math.max(1,new THREE.Vector3().subVectors(fromPosition,target).length());
+ const toPosition=target.clone().addScaledVector(preset.direction.clone().normalize(),distance);
+ const toUp=preset.up.clone();
+ const virtual=new THREE.OrthographicCamera(-1,1,1,-1,.001,100000);
+ virtual.position.copy(toPosition);virtual.up.copy(toUp);virtual.lookAt(target);
+ const toQuaternion=virtual.quaternion.clone();
+ // Angle-aware duration: 90° ~1.5s, 180° ~2s, small adjustments shorter.
+ const rotationAngle=fromQuaternion.angleTo(toQuaternion);
+ const duration=Math.min(2000,Math.max(350,rotationAngle<=Math.PI/2?1500*rotationAngle/(Math.PI/2):1500+500*(rotationAngle-Math.PI/2)/(Math.PI/2)));
+ const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+ cameraMode=mode;updateCameraButtonState(mode);
+ cameraTransition={mode,fromPosition,fromQuaternion,fromUp,fromTarget:target.clone(),toPosition,toQuaternion,toUp,toTarget:target.clone(),startedAt:performance.now(),duration:reduced?0:duration};
+ controls.enabled=false;
+ if(reduced)advanceCameraTransition(performance.now());
 }
 for(const id of ['3d','xy','xz','yz','zy'])$('view'+id).onclick=()=>setCameraView(id);
-// Dragging away from a preset makes it a free-moving view, not a locked mode.
 function markCustomCameraView(){if(cameraMode!=='3d'){cameraMode='custom';updateCameraButtonState('custom')}}
 function meshFromField(fn,n,b){
 // Consistent marching-tetrahedra: correctly pair the four crossings.
